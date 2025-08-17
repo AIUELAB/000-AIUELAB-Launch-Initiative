@@ -3,7 +3,7 @@
 # https://pre-commit.com/
 
 default_language_version:
-  python: python3.11
+  python: python3
 
 repos:
   # 基本的なフック
@@ -117,7 +117,30 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
-        stages: [push]
+        stages: [pre-push]
+      
+      # TODO/FIXMEチェック
+      - id: check-todos
+        name: Check TODOs
+        entry: python scripts/check_todos.py
+        language: system
+        pass_filenames: false
+        always_run: true
+      
+      # セキュリティスキャン
+      - id: security-check
+        name: Security Check
+        entry: python scripts/check_no_secrets.py
+        language: system
+        pass_filenames: false
+        always_run: true
+      
+      # 依存関係チェック
+      - id: requirements-check
+        name: Check requirements
+        entry: bash -c "pip freeze | diff requirements.txt - || true"
+        language: system
+        pass_filenames: false
 
 # 設定
 fail_fast: false
