@@ -1,0 +1,111 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run weekly on Sunday at 2 AM
+    - cron: '0 2 * * 0'
+  workflow_dispatch:
+
+jobs:
+  dependency-check:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run OWASP Dependency-Check
+      uses: dependency-check/Dependency-Check_Action@main
+      with:
+        project: 'claude-code-template-mcp'
+        path: '.'
+        format: 'HTML,JSON'
+        args: >
+          --enableRetired
+          --enableExperimental
+      env:
+        JAVA_HOME: /opt/jdk
+
+    - name: Upload results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: dependency-check-report
+        path: reports/
+
+    - name: Check for vulnerabilities
+      run: |
+        python -c "
+        import json
+        import sys
+
+        with open('reports/dependency-check-report.json', 'r') as f:
+            report = json.load(f)
+
+        critical = 0
+        high = 0
+
+        for dep in report.get('dependencies', []):
+            for vuln in dep.get('vulnerabilities', []):
+                severity = vuln.get('severity', '')
+                if severity == 'CRITICAL':
+                    critical += 1
+                elif severity == 'HIGH':
+                    high += 1
+
+        if critical > 0:
+            print(f'❌ Found {critical} CRITICAL vulnerabilities')
+            sys.exit(1)
+        elif high > 5:
+            print(f'⚠️  Found {high} HIGH vulnerabilities (threshold: 5)')
+            sys.exit(1)
+        else:
+            print('✅ Vulnerability check passed')
+        "
+
+  pip-audit:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install pip-audit
+      run: pip install pip-audit
+
+    - name: Run pip-audit
+      run: pip-audit -r requirements.txt --desc
+
+  safety-check:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install safety
+      run: pip install safety
+
+    - name: Run safety check
+      run: safety check -r requirements.txt --json
