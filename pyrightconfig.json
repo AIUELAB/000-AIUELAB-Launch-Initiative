@@ -1,0 +1,93 @@
+{
+  "include": [
+    "src",
+    "tests"
+  ],
+  "exclude": [
+    "**/__pycache__",
+    "**/node_modules",
+    "**/.venv",
+    "**/venv",
+    ".git",
+    "build",
+    "dist"
+  ],
+  "ignore": [
+    "src/scratch"
+  ],
+  "defineConstant": {
+    "DEBUG": true
+  },
+  "stubPath": "typings",
+  "venvPath": ".",
+  "venv": "venv",
+
+  "typeCheckingMode": "strict",
+  "pythonVersion": "3.11",
+  "pythonPlatform": "All",
+
+  "reportMissingImports": false,
+  "reportMissingTypeStubs": false,
+  "reportMissingModuleSource": false,
+
+  "reportUnusedImport": true,
+  "reportUnusedClass": true,
+  "reportUnusedFunction": true,
+  "reportUnusedVariable": true,
+  "reportDuplicateImport": true,
+
+  "reportWildcardImportFromLibrary": "error",
+  "reportOptionalSubscript": "error",
+  "reportOptionalMemberAccess": "error",
+  "reportOptionalCall": "error",
+  "reportOptionalIterable": "error",
+  "reportOptionalContextManager": "error",
+  "reportOptionalOperand": "error",
+
+  "reportTypedDictNotRequiredAccess": "error",
+  "reportPrivateImportUsage": "error",
+  "reportUnboundVariable": "error",
+  "reportAssertAlwaysTrue": "warning",
+  "reportSelfClsParameterName": "error",
+  "reportUnsupportedDunderAll": "error",
+  "reportIncompatibleMethodOverride": "error",
+  "reportIncompatibleVariableOverride": "error",
+  "reportOverlappingOverload": "error",
+  "reportConstantRedefinition": "error",
+  "reportInvalidStringEscapeSequence": "error",
+  "reportUnknownParameterType": false,
+  "reportUnknownArgumentType": false,
+  "reportUnknownLambdaType": false,
+  "reportUnknownVariableType": false,
+  "reportUnknownMemberType": false,
+  "reportMissingParameterType": false,
+  "reportMissingTypeArgument": false,
+  "reportInvalidTypeVarUse": "error",
+  "reportCallInDefaultInitializer": "warning",
+  "reportUnnecessaryIsInstance": "warning",
+  "reportUnnecessaryCast": "warning",
+  "reportUnnecessaryComparison": "warning",
+  "reportUnnecessaryContains": "warning",
+  "reportImplicitStringConcatenation": false,
+  "reportInvalidStubStatement": "error",
+  "reportIncompleteStub": "warning",
+  "reportUndefinedVariable": "error",
+  "reportUnusedCallResult": false,
+  "reportUnusedCoroutine": "error",
+  "reportUnusedExpression": "warning",
+  "reportUnnecessaryTypeIgnoreComment": "warning",
+  "reportMatchNotExhaustive": "error",
+
+  "executionEnvironments": [
+    {
+      "root": "src",
+      "pythonVersion": "3.11",
+      "extraPaths": []
+    },
+    {
+      "root": "tests",
+      "pythonVersion": "3.11",
+      "extraPaths": ["src"]
+    }
+  ]
+}
