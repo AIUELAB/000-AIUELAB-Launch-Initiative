@@ -12,6 +12,9 @@
 - ✅ Docker隔離環境
 - ✅ GitHub Actions統合
 - ✅ 25+ MCPサーバー設定
+- ✅ リモートMCPサーバー対応 (SSE/HTTP)
+- ✅ OAuth 2.0認証サポート
+- ✅ ハイブリッドプロファイル (ローカル+リモート)
 
 ### 開発環境
 - ✅ Python 3.13.5 + venv

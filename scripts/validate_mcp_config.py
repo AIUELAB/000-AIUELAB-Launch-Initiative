@@ -1,215 +1,296 @@
 #!/usr/bin/env python3
 """
-MCP設定ファイルの検証スクリプト
-claude_desktop_config.jsonの構文と設定をチェック
+Validate MCP (Model Context Protocol) configuration files.
+Ensures all MCP server configurations are valid and properly formatted.
 """
 
 import json
 import os
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Dict, List, Any, Optional, Tuple
 
 
-def validate_json_syntax(file_path: Path) -> tuple[bool, str]:
-    """JSON構文の検証"""
-    try:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            json.load(f)
-        return True, "Valid JSON syntax"
-    except json.JSONDecodeError as e:
-        return False, f"Invalid JSON syntax: {e}"
-    except FileNotFoundError:
-        return False, f"File not found: {file_path}"
-    except Exception as e:
-        return False, f"Error reading file: {e}"
-
-
-def validate_mcp_server(server_name: str, server_config: Dict[str, Any]) -> List[str]:
-    """個別のMCPサーバー設定を検証"""
-    errors = []
-    warnings = []
+class MCPConfigValidator:
+    """Validator for MCP configuration files."""
     
-    # 必須フィールドのチェック
-    if 'command' not in server_config:
-        errors.append(f"  ❌ {server_name}: Missing 'command' field")
-    
-    # コマンドの検証
-    if 'command' in server_config:
-        command = server_config['command']
-        
-        if not command:
-            errors.append(f"  ❌ {server_name}: Empty command")
-        elif isinstance(command, str):
-            # 単一コマンドの場合
-            if not Path(command).name:
-                errors.append(f"  ❌ {server_name}: Invalid command: {command}")
-        elif isinstance(command, list):
-            # コマンド配列の場合
-            if len(command) == 0:
-                errors.append(f"  ❌ {server_name}: Empty command array")
-            else:
-                cmd_executable = command[0]
-                # 実行可能ファイルの存在チェック（一般的なコマンドのみ）
-                common_commands = ['node', 'python', 'python3', 'npx', 'uvx', 'docker']
-                if cmd_executable in common_commands:
-                    if os.system(f"which {cmd_executable} > /dev/null 2>&1") != 0:
-                        warnings.append(f"  ⚠️  {server_name}: Command '{cmd_executable}' not found in PATH")
-    
-    # 引数の検証
-    if 'args' in server_config:
-        args = server_config['args']
-        if not isinstance(args, list):
-            errors.append(f"  ❌ {server_name}: 'args' must be a list")
-        elif isinstance(command, str):
-            warnings.append(f"  ⚠️  {server_name}: 'args' is ignored when 'command' is a string")
-    
-    # 環境変数の検証
-    if 'env' in server_config:
-        env = server_config['env']
-        if not isinstance(env, dict):
-            errors.append(f"  ❌ {server_name}: 'env' must be a dictionary")
-        else:
-            for key, value in env.items():
-                if not isinstance(key, str):
-                    errors.append(f"  ❌ {server_name}: Environment variable key must be a string: {key}")
-                if value is not None and not isinstance(value, str):
-                    errors.append(f"  ❌ {server_name}: Environment variable value must be a string: {key}={value}")
-                
-                # 環境変数が設定されているかチェック
-                if isinstance(value, str) and value.startswith('${') and value.endswith('}'):
-                    env_var = value[2:-1]
-                    if not os.getenv(env_var):
-                        warnings.append(f"  ⚠️  {server_name}: Environment variable not set: {env_var}")
-    
-    # Node.jsパッケージの存在チェック
-    if isinstance(server_config.get('command'), list):
-        command = server_config['command']
-        if len(command) > 0 and command[0] in ['node', 'npx']:
-            if len(command) > 1:
-                package_path = command[1]
-                if package_path.startswith('/') or package_path.startswith('./'):
-                    # ローカルパスの場合
-                    if not Path(package_path).exists():
-                        errors.append(f"  ❌ {server_name}: Package not found: {package_path}")
-                elif '@' in package_path:
-                    # npmパッケージの場合
-                    package_name = package_path.split('/')[-1]
-                    # パッケージの存在確認（簡易チェック）
-                    node_modules = Path('node_modules')
-                    if node_modules.exists():
-                        if not any(node_modules.glob(f"**/{package_name}*")):
-                            warnings.append(f"  ⚠️  {server_name}: Package may not be installed: {package_path}")
-    
-    return errors + warnings
-
-
-def validate_mcp_config(config_path: Path) -> tuple[bool, List[str]]:
-    """MCP設定全体を検証"""
-    messages = []
-    
-    # JSON構文チェック
-    is_valid, message = validate_json_syntax(config_path)
-    if not is_valid:
-        messages.append(f"❌ {message}")
-        return False, messages
-    
-    messages.append(f"✅ Valid JSON syntax")
-    
-    # 設定内容の読み込み
-    with open(config_path, 'r', encoding='utf-8') as f:
-        config = json.load(f)
-    
-    # mcpServersセクションの存在チェック
-    if 'mcpServers' not in config:
-        messages.append("❌ Missing 'mcpServers' section")
-        return False, messages
-    
-    mcp_servers = config['mcpServers']
-    if not isinstance(mcp_servers, dict):
-        messages.append("❌ 'mcpServers' must be a dictionary")
-        return False, messages
-    
-    if not mcp_servers:
-        messages.append("⚠️  No MCP servers configured")
-        return True, messages
-    
-    messages.append(f"📦 Found {len(mcp_servers)} MCP server(s)")
-    
-    # 各サーバーの検証
-    has_errors = False
-    for server_name, server_config in mcp_servers.items():
-        if not isinstance(server_config, dict):
-            messages.append(f"  ❌ {server_name}: Invalid configuration (must be a dictionary)")
-            has_errors = True
-            continue
-        
-        server_messages = validate_mcp_server(server_name, server_config)
-        if server_messages:
-            messages.extend(server_messages)
-            if any('❌' in msg for msg in server_messages):
-                has_errors = True
-        else:
-            messages.append(f"  ✅ {server_name}: Valid configuration")
-    
-    return not has_errors, messages
-
-
-def check_required_env_vars() -> List[str]:
-    """必要な環境変数のチェック"""
-    messages = []
-    
-    # 一般的に必要な環境変数
-    required_vars = {
-        'GITHUB_TOKEN': 'GitHub MCP server',
-        'OPENAI_API_KEY': 'OpenAI integration',
-        'ANTHROPIC_API_KEY': 'Anthropic integration',
-        'BRAVE_API_KEY': 'Brave Search',
+    REQUIRED_FIELDS = {
+        'command': str,  # Required for local servers
     }
     
-    missing_vars = []
-    for var, usage in required_vars.items():
-        if not os.getenv(var):
-            missing_vars.append(f"  - {var} (for {usage})")
+    OPTIONAL_FIELDS = {
+        'args': list,
+        'env': dict,
+        'disabled': bool,
+        'description': str,
+        'transport': str,  # For remote servers
+        'url': str,  # For remote servers
+        'headers': dict,  # For remote servers
+        'oauth': dict,  # For OAuth-enabled servers
+        'tlsVerify': bool,
+        'timeout': int,
+    }
     
-    if missing_vars:
-        messages.append("\n⚠️  Missing environment variables:")
-        messages.extend(missing_vars)
-        messages.append("  💡 Tip: Copy .env.mcp.example to .env.mcp and fill in your values")
+    VALID_TRANSPORTS = ['stdio', 'sse', 'http']
     
-    return messages
+    KNOWN_SERVERS = {
+        'serena', 'filesystem', 'github', 'fetch', 'context7',
+        'brave-search', 'playwright', 'ide', 'firecrawl',
+        'memory', 'sequential-thinking', 'puppeteer', 'postgres',
+        'slack', 'gitlab', 'google-maps', 'aws', 'gcp', 'azure',
+        'docker', 'kubernetes', 'smithery-cli', 'smithery-stdout',
+        'linear-remote', 'notion-remote', 'sentry-remote',
+        'apidog-remote', 'simplescraper-remote'
+    }
+    
+    def __init__(self, config_dir: Path):
+        """Initialize validator with config directory."""
+        self.config_dir = config_dir
+        self.errors: List[str] = []
+        self.warnings: List[str] = []
+    
+    def validate_file(self, file_path: Path) -> bool:
+        """Validate a single MCP config file."""
+        if not file_path.exists():
+            self.errors.append(f"Config file not found: {file_path}")
+            return False
+        
+        try:
+            with open(file_path, 'r') as f:
+                config = json.load(f)
+        except json.JSONDecodeError as e:
+            self.errors.append(f"Invalid JSON in {file_path}: {e}")
+            return False
+        except Exception as e:
+            self.errors.append(f"Error reading {file_path}: {e}")
+            return False
+        
+        # Check for mcpServers key
+        if 'mcpServers' not in config:
+            self.errors.append(f"Missing 'mcpServers' key in {file_path}")
+            return False
+        
+        servers = config['mcpServers']
+        if not isinstance(servers, dict):
+            self.errors.append(f"'mcpServers' must be a dictionary in {file_path}")
+            return False
+        
+        # Validate each server
+        for server_name, server_config in servers.items():
+            # Skip comment entries
+            if server_name.startswith('//'):
+                continue
+            
+            self._validate_server(server_name, server_config, file_path)
+        
+        return len(self.errors) == 0
+    
+    def _validate_server(self, name: str, config: Dict[str, Any], file_path: Path) -> None:
+        """Validate individual server configuration."""
+        # Check if it's a remote server
+        is_remote = 'transport' in config
+        
+        if is_remote:
+            self._validate_remote_server(name, config, file_path)
+        else:
+            self._validate_local_server(name, config, file_path)
+        
+        # Warn about unknown servers
+        base_name = name.replace('-remote', '').replace('-hybrid', '')
+        if base_name not in self.KNOWN_SERVERS and not name.startswith('custom'):
+            self.warnings.append(f"Unknown server '{name}' in {file_path.name}")
+    
+    def _validate_local_server(self, name: str, config: Dict[str, Any], file_path: Path) -> None:
+        """Validate local server configuration."""
+        # Check for hybrid configuration
+        if 'primary' in config and 'fallback' in config:
+            # Hybrid server
+            self._validate_local_server(f"{name}-primary", config.get('primary', {}), file_path)
+            if 'transport' in config.get('fallback', {}):
+                self._validate_remote_server(f"{name}-fallback", config.get('fallback', {}), file_path)
+            return
+        
+        # Check required fields
+        if 'command' not in config:
+            self.errors.append(f"Server '{name}' missing required 'command' field in {file_path.name}")
+            return
+        
+        # Validate command
+        command = config['command']
+        if not isinstance(command, str):
+            self.errors.append(f"Server '{name}' has invalid 'command' type in {file_path.name}")
+        
+        # Validate args
+        if 'args' in config:
+            if not isinstance(config['args'], list):
+                self.errors.append(f"Server '{name}' has invalid 'args' type in {file_path.name}")
+            else:
+                for arg in config['args']:
+                    if not isinstance(arg, str):
+                        self.errors.append(f"Server '{name}' has non-string arg in {file_path.name}")
+        
+        # Validate env
+        if 'env' in config:
+            if not isinstance(config['env'], dict):
+                self.errors.append(f"Server '{name}' has invalid 'env' type in {file_path.name}")
+            else:
+                for key, value in config['env'].items():
+                    if not isinstance(key, str) or not isinstance(value, str):
+                        self.errors.append(f"Server '{name}' has invalid env var in {file_path.name}")
+    
+    def _validate_remote_server(self, name: str, config: Dict[str, Any], file_path: Path) -> None:
+        """Validate remote server configuration."""
+        # Check transport
+        transport = config.get('transport')
+        if not transport:
+            self.errors.append(f"Remote server '{name}' missing 'transport' in {file_path.name}")
+            return
+        
+        if transport not in self.VALID_TRANSPORTS:
+            self.errors.append(f"Server '{name}' has invalid transport '{transport}' in {file_path.name}")
+        
+        # Check URL
+        if 'url' not in config:
+            self.errors.append(f"Remote server '{name}' missing 'url' in {file_path.name}")
+        elif not isinstance(config['url'], str):
+            self.errors.append(f"Server '{name}' has invalid 'url' type in {file_path.name}")
+        
+        # Validate headers
+        if 'headers' in config:
+            if not isinstance(config['headers'], dict):
+                self.errors.append(f"Server '{name}' has invalid 'headers' type in {file_path.name}")
+        
+        # Validate OAuth config
+        if 'oauth' in config:
+            oauth = config['oauth']
+            if not isinstance(oauth, dict):
+                self.errors.append(f"Server '{name}' has invalid 'oauth' type in {file_path.name}")
+            else:
+                # Check OAuth fields
+                oauth_fields = ['clientId', 'clientSecret', 'scope', 'authorizationUrl', 'tokenEndpoint']
+                for field in ['clientId']:  # Only clientId is truly required
+                    if field not in oauth:
+                        self.warnings.append(f"Server '{name}' OAuth missing '{field}' in {file_path.name}")
+    
+    def validate_env_file(self, env_file: Path) -> bool:
+        """Validate environment file has required variables."""
+        if not env_file.exists():
+            self.warnings.append(f"Environment file not found: {env_file}")
+            return True  # Not an error, just a warning
+        
+        required_vars = {
+            'GITHUB_TOKEN': 'GitHub integration',
+            'BRAVE_API_KEY': 'Web search',
+        }
+        
+        try:
+            with open(env_file, 'r') as f:
+                content = f.read()
+        except Exception as e:
+            self.errors.append(f"Error reading {env_file}: {e}")
+            return False
+        
+        for var, purpose in required_vars.items():
+            if var not in content:
+                self.warnings.append(f"Missing {var} in {env_file.name} (needed for {purpose})")
+        
+        return True
+    
+    def validate_all(self) -> bool:
+        """Validate all MCP configuration files."""
+        valid = True
+        
+        # Main config file
+        main_config = self.config_dir / 'claude_desktop_config.json'
+        if main_config.exists():
+            print(f"✓ Validating {main_config.name}...")
+            valid = self.validate_file(main_config) and valid
+        
+        # Remote config file
+        remote_config = self.config_dir / 'claude_desktop_config_remote.json'
+        if remote_config.exists():
+            print(f"✓ Validating {remote_config.name}...")
+            valid = self.validate_file(remote_config) and valid
+        
+        # Profile files
+        profiles_dir = self.config_dir / 'profiles'
+        if profiles_dir.exists():
+            for profile_file in profiles_dir.glob('*.json'):
+                print(f"✓ Validating profile: {profile_file.name}...")
+                valid = self.validate_file(profile_file) and valid
+        
+        # Remote servers config
+        remote_servers = self.config_dir / 'remote-servers.json'
+        if remote_servers.exists():
+            print(f"✓ Validating {remote_servers.name}...")
+            # This file has different structure, skip detailed validation
+            try:
+                with open(remote_servers, 'r') as f:
+                    json.load(f)
+            except Exception as e:
+                self.errors.append(f"Invalid JSON in {remote_servers.name}: {e}")
+                valid = False
+        
+        # Check environment files
+        env_file = self.config_dir.parent / '.env.mcp'
+        env_example = self.config_dir.parent / '.env.mcp.example'
+        
+        if env_example.exists():
+            print(f"✓ Checking environment template...")
+            self.validate_env_file(env_example)
+        
+        if env_file.exists():
+            print(f"✓ Checking environment variables...")
+            self.validate_env_file(env_file)
+        
+        return valid
+    
+    def print_report(self) -> None:
+        """Print validation report."""
+        print("\n" + "="*60)
+        print("MCP Configuration Validation Report")
+        print("="*60)
+        
+        if not self.errors and not self.warnings:
+            print("✅ All MCP configurations are valid!")
+        else:
+            if self.errors:
+                print(f"\n❌ Errors ({len(self.errors)}):")
+                for error in self.errors:
+                    print(f"  • {error}")
+            
+            if self.warnings:
+                print(f"\n⚠️  Warnings ({len(self.warnings)}):")
+                for warning in self.warnings:
+                    print(f"  • {warning}")
+        
+        print("="*60)
 
 
 def main():
-    """メインエントリーポイント"""
-    project_root = Path.cwd()
-    config_path = project_root / 'mcp-config' / 'claude_desktop_config.json'
+    """Main function."""
+    # Get project root
+    script_dir = Path(__file__).parent
+    project_root = script_dir.parent
+    config_dir = project_root / 'mcp-config'
     
-    print("🔍 Validating MCP configuration...")
-    print(f"📄 Config file: {config_path}")
-    print()
+    print("🔍 Validating MCP configuration files...")
+    print(f"📁 Config directory: {config_dir}")
     
-    # 設定ファイルの検証
-    is_valid, messages = validate_mcp_config(config_path)
+    # Create validator
+    validator = MCPConfigValidator(config_dir)
     
-    for message in messages:
-        print(message)
+    # Validate all configs
+    is_valid = validator.validate_all()
     
-    # 環境変数のチェック
-    env_messages = check_required_env_vars()
-    if env_messages:
-        print()
-        for message in env_messages:
-            print(message)
+    # Print report
+    validator.print_report()
     
-    print()
-    if is_valid:
-        print("✅ MCP configuration validation passed!")
-        sys.exit(0)
-    else:
-        print("❌ MCP configuration validation failed!")
-        print("Please fix the errors above before proceeding.")
+    # Exit with appropriate code
+    if not is_valid or validator.errors:
         sys.exit(1)
+    
+    sys.exit(0)
 
 
 if __name__ == "__main__":

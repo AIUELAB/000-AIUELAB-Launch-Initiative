@@ -1,87 +1,104 @@
 #!/usr/bin/env python3
 """
-APIキーやシークレットが誤ってコミットされないようチェックするスクリプト
+Security check script to detect secrets in codebase.
+Prevents accidental commits of sensitive information.
 """
 
+import os
 import re
 import sys
+import json
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Dict, Any
 
-# チェックするパターン
+# Patterns for detecting secrets
 SECRET_PATTERNS = [
-    # APIキー
-    (r'(api[_-]?key|apikey)\s*=\s*["\']([^"\']+)["\']', "API Key"),
-    (r'(secret[_-]?key|secretkey)\s*=\s*["\']([^"\']+)["\']', "Secret Key"),
-    (r'(access[_-]?token|accesstoken)\s*=\s*["\']([^"\']+)["\']', "Access Token"),
-    (r'(private[_-]?key|privatekey)\s*=\s*["\']([^"\']+)["\']', "Private Key"),
+    # API Keys
+    (r'["\']?api[_-]?key["\']?\s*[:=]\s*["\'][a-zA-Z0-9_\-]{20,}["\']', 'API Key'),
+    (r'["\']?apikey["\']?\s*[:=]\s*["\'][a-zA-Z0-9_\-]{20,}["\']', 'API Key'),
     
-    # 一般的なAPIキーパターン
-    (r'sk-[a-zA-Z0-9]{48}', "OpenAI API Key"),
-    (r'ghp_[a-zA-Z0-9]{36}', "GitHub Personal Access Token"),
-    (r'ghs_[a-zA-Z0-9]{36}', "GitHub Secret"),
-    (r'github_pat_[a-zA-Z0-9]{22}_[a-zA-Z0-9]{59}', "GitHub Fine-grained PAT"),
+    # AWS
+    (r'AKIA[0-9A-Z]{16}', 'AWS Access Key'),
+    (r'["\']?aws[_-]?secret[_-]?access[_-]?key["\']?\s*[:=]\s*["\'][a-zA-Z0-9/+=]{40}["\']', 'AWS Secret Key'),
     
-    # AWSクレデンシャル
-    (r'AKIA[0-9A-Z]{16}', "AWS Access Key ID"),
-    (r'aws_secret_access_key\s*=\s*["\']([^"\']+)["\']', "AWS Secret Key"),
+    # GitHub
+    (r'ghp_[a-zA-Z0-9]{36}', 'GitHub Personal Access Token'),
+    (r'gho_[a-zA-Z0-9]{36}', 'GitHub OAuth Token'),
+    (r'ghu_[a-zA-Z0-9]{36}', 'GitHub User Token'),
+    (r'ghs_[a-zA-Z0-9]{36}', 'GitHub Server Token'),
+    (r'ghr_[a-zA-Z0-9]{36}', 'GitHub Refresh Token'),
     
-    # データベース認証情報
-    (r'(password|passwd|pwd)\s*=\s*["\']([^"\']+)["\']', "Password"),
-    (r'(database_url|db_url)\s*=\s*["\']([^"\']+)["\']', "Database URL"),
+    # Private Keys
+    (r'-----BEGIN (RSA|DSA|EC|OPENSSH|PGP) PRIVATE KEY-----', 'Private Key'),
+    (r'-----BEGIN PRIVATE KEY-----', 'Private Key'),
     
-    # その他
-    (r'Bearer\s+[a-zA-Z0-9\-\._~\+\/]+', "Bearer Token"),
-    (r'Basic\s+[a-zA-Z0-9=]+', "Basic Auth"),
+    # Generic Secrets
+    (r'["\']?password["\']?\s*[:=]\s*["\'][^"\']{8,}["\']', 'Password'),
+    (r'["\']?secret["\']?\s*[:=]\s*["\'][^"\']{8,}["\']', 'Secret'),
+    (r'["\']?token["\']?\s*[:=]\s*["\'][a-zA-Z0-9_\-\.]{20,}["\']', 'Token'),
+    
+    # Database URLs with credentials
+    (r'(mysql|postgresql|mongodb)://[^:]+:[^@]+@[^/]+', 'Database URL with credentials'),
+    
+    # JWT
+    (r'eyJ[a-zA-Z0-9_\-]+\.eyJ[a-zA-Z0-9_\-]+\.[a-zA-Z0-9_\-]+', 'JWT Token'),
+    
+    # Slack
+    (r'xox[baprs]-[0-9]{10,13}-[0-9]{10,13}-[a-zA-Z0-9]{24,34}', 'Slack Token'),
+    
+    # Google
+    (r'AIza[0-9A-Za-z_\-]{35}', 'Google API Key'),
+    
+    # Stripe
+    (r'sk_live_[0-9a-zA-Z]{24,}', 'Stripe Secret Key'),
+    (r'rk_live_[0-9a-zA-Z]{24,}', 'Stripe Restricted Key'),
 ]
 
-# 除外するファイル/ディレクトリ
-EXCLUDE_PATHS = [
+# Files/directories to skip
+SKIP_PATHS = {
     '.git',
-    '.venv',
-    'venv',
-    '__pycache__',
-    'node_modules',
     '.env.example',
     '.env.mcp.example',
-    '*.example',
-    'test_*',
-    '*_test.py',
-]
+    'node_modules',
+    'venv',
+    '__pycache__',
+    '.pytest_cache',
+    '.mypy_cache',
+    '.ruff_cache',
+    'dist',
+    'build',
+    '*.pyc',
+    '*.pyo',
+    '*.pyd',
+    '.DS_Store',
+    'Thumbs.db',
+}
 
-# 許可するダミー値
-ALLOWED_DUMMY_VALUES = [
-    'your-api-key-here',
-    'your_api_key_here',
-    'YOUR_API_KEY_HERE',
-    'xxx',
-    'XXX',
-    'placeholder',
-    'example',
-    'test',
-    'dummy',
-    'fake',
-    '<your-key>',
-    '${API_KEY}',
-    '$(API_KEY)',
-    'sk-...', 
-    'ghp_...',
-    'your_github_token',
-    'your_openai_key',
-]
+# Files that are allowed to contain example secrets
+ALLOWED_FILES = {
+    '.env.example',
+    '.env.mcp.example',
+    'test_*.py',
+    '*_test.py',
+    'check_no_secrets.py',  # This file itself
+    'example*.py',
+    'sample*.py',
+}
 
 
 def should_skip_file(file_path: Path) -> bool:
-    """ファイルをスキップすべきか判定"""
-    path_str = str(file_path)
-    
-    for exclude in EXCLUDE_PATHS:
-        if exclude in path_str:
-            return True
-        if file_path.match(exclude):
+    """Check if file should be skipped."""
+    # Skip if in skip paths
+    for skip in SKIP_PATHS:
+        if skip in str(file_path):
             return True
     
-    # バイナリファイルはスキップ
+    # Skip if in allowed files
+    for allowed in ALLOWED_FILES:
+        if allowed in file_path.name or file_path.match(allowed):
+            return True
+    
+    # Skip binary files
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             f.read(1)
@@ -91,88 +108,94 @@ def should_skip_file(file_path: Path) -> bool:
     return False
 
 
-def is_allowed_value(value: str) -> bool:
-    """許可されたダミー値かチェック"""
-    value_lower = value.lower()
-    
-    for allowed in ALLOWED_DUMMY_VALUES:
-        if allowed.lower() in value_lower:
-            return True
-    
-    # 環境変数参照の場合は許可
-    if value.startswith('$') or value.startswith('${'):
-        return True
-    
-    # 空文字や短すぎる値は無視
-    if len(value) < 5:
-        return True
-    
-    return False
-
-
-def check_file_for_secrets(file_path: Path) -> List[Tuple[int, str, str]]:
-    """ファイル内のシークレットをチェック"""
+def scan_file(file_path: Path) -> List[Tuple[int, str, str]]:
+    """Scan a file for secrets."""
     findings = []
     
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
-            lines = f.readlines()
+            content = f.read()
+            lines = content.splitlines()
     except Exception:
         return findings
     
-    for line_no, line in enumerate(lines, 1):
-        # コメント行はスキップ
-        stripped = line.strip()
-        if stripped.startswith('#') or stripped.startswith('//'):
-            continue
-        
-        for pattern, secret_type in SECRET_PATTERNS:
-            matches = re.finditer(pattern, line, re.IGNORECASE)
-            for match in matches:
-                # マッチした値を取得
-                if match.groups():
-                    value = match.group(len(match.groups()))
-                else:
-                    value = match.group(0)
-                
-                # 許可された値でなければ報告
-                if not is_allowed_value(value):
-                    findings.append((line_no, secret_type, value[:20] + '...'))
+    # Check each pattern
+    for pattern, secret_type in SECRET_PATTERNS:
+        for match in re.finditer(pattern, content, re.IGNORECASE | re.MULTILINE):
+            # Find line number
+            line_num = content[:match.start()].count('\n') + 1
+            line_content = lines[line_num - 1].strip()
+            
+            # Skip if it's a variable reference like ${API_KEY}
+            if '${' in match.group(0) or 'process.env' in line_content:
+                continue
+            
+            # Skip if it's clearly a placeholder
+            if any(placeholder in match.group(0).lower() for placeholder in 
+                   ['your_', 'example', 'placeholder', 'xxx', '...', '<', '>']):
+                continue
+            
+            findings.append((line_num, secret_type, line_content[:100]))
     
     return findings
 
 
+def scan_directory(root_dir: Path) -> Dict[str, List[Tuple[int, str, str]]]:
+    """Scan directory for secrets."""
+    all_findings = {}
+    
+    for file_path in root_dir.rglob('*'):
+        if file_path.is_file() and not should_skip_file(file_path):
+            findings = scan_file(file_path)
+            if findings:
+                relative_path = file_path.relative_to(root_dir)
+                all_findings[str(relative_path)] = findings
+    
+    return all_findings
+
+
+def generate_report(findings: Dict[str, List[Tuple[int, str, str]]]) -> str:
+    """Generate security report."""
+    if not findings:
+        return "✅ No secrets detected in the codebase."
+    
+    report = ["🚨 SECURITY WARNING: Potential secrets detected!\n"]
+    total_issues = sum(len(f) for f in findings.values())
+    
+    report.append(f"Found {total_issues} potential secret(s) in {len(findings)} file(s):\n")
+    
+    for file_path, file_findings in findings.items():
+        report.append(f"\n📄 {file_path}:")
+        for line_num, secret_type, line_content in file_findings:
+            report.append(f"  Line {line_num}: [{secret_type}] {line_content}")
+    
+    report.append("\n⚠️  Please remove these secrets before committing!")
+    report.append("💡 Use environment variables or a secrets manager instead.")
+    
+    return "\n".join(report)
+
+
 def main():
-    """メインエントリーポイント"""
-    project_root = Path.cwd()
+    """Main function."""
+    # Get project root
+    script_dir = Path(__file__).parent
+    project_root = script_dir.parent
     
-    # チェック対象のファイルを収集
-    files_to_check = []
-    for ext in ['*.py', '*.js', '*.ts', '*.jsx', '*.tsx', '*.json', '*.yaml', '*.yml', 
-                '*.toml', '*.ini', '*.cfg', '*.conf', '*.sh', '*.bash', '*.env*']:
-        files_to_check.extend(project_root.rglob(ext))
+    print("🔍 Scanning for secrets in codebase...")
+    print(f"📁 Project root: {project_root}")
     
-    has_secrets = False
+    # Scan for secrets
+    findings = scan_directory(project_root)
     
-    for file_path in files_to_check:
-        if should_skip_file(file_path):
-            continue
-        
-        findings = check_file_for_secrets(file_path)
-        
-        if findings:
-            has_secrets = True
-            print(f"\n⚠️  Potential secrets found in {file_path.relative_to(project_root)}:")
-            for line_no, secret_type, preview in findings:
-                print(f"  Line {line_no}: {secret_type} - {preview}")
+    # Generate report
+    report = generate_report(findings)
+    print("\n" + report)
     
-    if has_secrets:
-        print("\n❌ Secrets detected! Please remove them before committing.")
-        print("💡 Tip: Use environment variables or .env files (added to .gitignore) instead.")
+    # Exit with error if secrets found
+    if findings:
         sys.exit(1)
-    else:
-        print("✅ No secrets detected in the codebase.")
-        sys.exit(0)
+    
+    sys.exit(0)
 
 
 if __name__ == "__main__":
