@@ -1,0 +1,75 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
+      ]
+    },
+    "playwright-headless": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest",
+        "--headless"
+      ]
+    },
+    "playwright-advanced": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest",
+        "--browser=chrome",
+        "--headless",
+        "--caps=vision,pdf",
+        "--output-dir=./playwright-output"
+      ]
+    },
+    "github": {
+      "command": "npx",
+      "args": [
+        "@modelcontextprotocol/server-github@latest"
+      ],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_PAT}"
+      }
+    },
+    "fetch": {
+      "command": "npx",
+      "args": [
+        "@modelcontextprotocol/server-fetch@latest"
+      ]
+    },
+    "brave-search": {
+      "command": "npx",
+      "args": [
+        "@modelcontextprotocol/server-brave-search@latest"
+      ],
+      "env": {
+        "BRAVE_API_KEY": "${BRAVE_API_KEY}"
+      }
+    },
+    "firecrawl": {
+      "command": "npx",
+      "args": [
+        "@modelcontextprotocol/server-firecrawl@latest"
+      ],
+      "env": {
+        "FIRECRAWL_API_KEY": "${FIRECRAWL_API_KEY}"
+      }
+    },
+    "ide": {
+      "command": "npx",
+      "args": [
+        "@modelcontextprotocol/server-ide@latest"
+      ]
+    },
+    "serena": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/oraios/serena",
+        "serena-mcp-server"
+      ],
+      "disabled": false
+    }
+  }
+}

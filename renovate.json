@@ -1,0 +1,51 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:base",
+    ":dependencyDashboard",
+    ":semanticPrefixFixDepsChoreOthers",
+    ":enablePreCommit",
+    "group:allNonMajor"
+  ],
+  "python": {
+    "enabled": true
+  },
+  "pip_requirements": {
+    "fileMatch": ["requirements\\.txt$", "requirements\\.in$"]
+  },
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["major"],
+      "automerge": false
+    },
+    {
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "matchDepTypes": ["devDependencies"],
+      "automerge": true
+    },
+    {
+      "matchPackagePatterns": ["^@modelcontextprotocol/"],
+      "groupName": "MCP packages",
+      "schedule": ["after 10pm on sunday"]
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "labels": ["security"],
+    "automerge": true,
+    "assignees": ["@me"]
+  },
+  "prConcurrentLimit": 3,
+  "prCreation": "immediate",
+  "rangeStrategy": "auto",
+  "schedule": ["before 3am on monday"],
+  "timezone": "Asia/Tokyo",
+  "labels": ["dependencies"],
+  "commitMessagePrefix": "chore(deps):",
+  "commitMessageAction": "update",
+  "commitMessageTopic": "{{depName}}",
+  "commitMessageExtra": "to {{newVersion}}"
+}

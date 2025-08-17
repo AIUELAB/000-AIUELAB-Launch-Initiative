@@ -1,0 +1,72 @@
+{
+  "name": "claude-code-template-mcp",
+  "description": "Project-specific MCP configuration for team sharing",
+  "version": "1.0.0",
+  "servers": {
+    "serena": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/oraios/serena",
+        "serena-mcp-server",
+        "--project",
+        "${PROJECT_ROOT}"
+      ],
+      "env": {},
+      "description": "Advanced code manipulation with LSP support"
+    },
+    "github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      },
+      "description": "GitHub integration for issues, PRs, and code"
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "${PROJECT_ROOT}"
+      ],
+      "env": {},
+      "description": "File system operations",
+      "disabled": true
+    }
+  },
+  "profiles": {
+    "minimal": {
+      "description": "Minimal setup for basic development",
+      "servers": ["serena"]
+    },
+    "standard": {
+      "description": "Standard setup with common tools",
+      "servers": ["serena", "github", "brave-search", "context7"]
+    },
+    "full": {
+      "description": "Full setup with all available servers",
+      "servers": ["*"]
+    }
+  },
+  "environment": {
+    "PROJECT_ROOT": "${PROJECT_ROOT:-/Users/admin/Documents/Cursor/claude-code-template-mcp}",
+    "GITHUB_TOKEN": "${GITHUB_TOKEN}",
+    "BRAVE_API_KEY": "${BRAVE_API_KEY}",
+    "FIRECRAWL_API_KEY": "${FIRECRAWL_API_KEY}"
+  },
+  "settings": {
+    "autoStart": true,
+    "debugMode": false,
+    "maxRetries": 3,
+    "timeout": 30000,
+    "performance": {
+      "maxConcurrentServers": 5,
+      "memoryLimit": "2GB",
+      "cpuThrottle": 0.8
+    }
+  }
+}

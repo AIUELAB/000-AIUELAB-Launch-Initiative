@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# Terminal-friendly summary display script
+# Optimized for 80-120 character width terminals
+
+# No colors for better compatibility
+clear
+
+echo "================================================"
+echo "   Claude Code Template - Setup Complete"
+echo "================================================"
+echo ""
+echo "[Features Added]"
+echo "1. Slash Commands     (.claude/commands/)"
+echo "2. Headless Mode      (scripts/claude-ci.sh)"
+echo "3. Docker Isolation   (docker-compose.claude.yml)"
+echo "4. CI/CD Pipeline     (.github/workflows/)"
+echo "5. Documentation      (NEW_FEATURES_2025.md)"
+echo ""
+echo "================================================"
+echo ""
+echo "[Next Steps]"
+echo ""
+echo "1. Set API Keys:"
+echo "   cp .env.mcp.example .env.mcp"
+echo "   # Edit .env.mcp with your keys"
+echo ""
+echo "2. Docker Setup (Optional):"
+echo "   docker-compose -f docker-compose.claude.yml build"
+echo ""
+echo "3. GitHub Actions:"
+echo "   # Add to GitHub Secrets:"
+echo "   # - ANTHROPIC_API_KEY"
+echo ""
+echo "4. Start Development:"
+echo "   cursor ."
+echo "   claude"
+echo ""
+echo "================================================"
+echo ""
+echo "For terminal display issues, see:"
+echo "TERMINAL_SETUP.md"
+echo ""
+echo "Project ready for Cursor + Claude Code!"
+echo ""
+echo "================================================"

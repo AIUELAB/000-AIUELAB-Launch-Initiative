@@ -1,0 +1,16 @@
+{
+  "description": "Minimal MCP configuration for best performance",
+  "mcpServers": {
+    "serena": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/oraios/serena",
+        "serena-mcp-server",
+        "--project",
+        "${PROJECT_ROOT}"
+      ],
+      "env": {}
+    }
+  }
+}
