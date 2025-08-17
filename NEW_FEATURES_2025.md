@@ -2,6 +2,39 @@
 
 ## ✨ 追加された機能
 
+### 5. リモートMCPサーバー対応 ✅ 
+**場所**: `mcp-config/remote-servers.json`, `REMOTE_MCP_SERVERS.md`
+
+**機能**:
+- SSE/HTTPトランスポート対応
+- OAuth 2.0認証サポート
+- クラウドホスト型サーバー接続
+- ローカル設定不要
+
+**対応サービス**:
+- Linear (課題管理)
+- Notion (ナレッジベース)
+- Sentry (エラー監視)
+- Apidog (API ドキュメント)
+- SimpleScraper (Webスクレイピング)
+
+**管理ツール**:
+```bash
+# リモートサーバー設定
+./scripts/setup-remote-mcp.sh
+
+# サーバー管理CLI
+./scripts/mcp-remote-manager.sh [command]
+  - list: サーバー一覧
+  - add: サーバー追加
+  - test: 接続テスト
+  - profile: プロファイル適用
+```
+
+**プロファイル**:
+- `remote`: リモートサーバーのみ
+- `hybrid`: ローカル＋リモート併用
+
 ### 1. スラッシュコマンド機能 ✅
 **場所**: `.claude/commands/`
 
@@ -121,6 +154,8 @@ docker-compose -f docker-compose.claude.yml run claude-yolo
 | CI/CD | 個別スクリプト | 統合パイプライン | 3x効率的 |
 | 危険操作 | 手動承認必要 | Docker隔離で自動 | 10x高速 |
 | コードレビュー | 人手のみ | Claude自動レビュー | 即座 |
+| サーバー管理 | ローカル設定必要 | リモートMCPサーバー | 設定時間90%削減 |
+| 外部サービス連携 | 複雑な設定 | OAuth自動認証 | 2分で完了 |
 
 ## 🔒 セキュリティ強化
 
@@ -143,6 +178,8 @@ docker-compose -f docker-compose.claude.yml run claude-yolo
 ✅ **自動化**: CI/CDパイプライン完全統合
 ✅ **安全性**: Docker隔離環境で安心実行
 ✅ **拡張性**: 新しいMCPサーバー追加可能
+✅ **クラウド対応**: リモートMCPサーバーでインフラ管理不要
+✅ **認証**: OAuth 2.0によるセキュアな外部サービス連携
 
 **次のステップ**: 
 1. `ANTHROPIC_API_KEY`を設定

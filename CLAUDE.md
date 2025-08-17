@@ -17,7 +17,16 @@
 パフォーマンスに応じて選択可能：
 - `minimal` - Serenaのみ（最高速）
 - `standard` - 基本開発セット
+- `remote` - リモートサーバーのみ（クラウドネイティブ）
+- `hybrid` - ローカル＋リモートの併用
 - `full` - 全機能有効
+
+### リモートMCPサーバー（2025年8月追加）
+クラウドホスト型MCPサーバーをローカル設定なしで利用可能：
+- **SSE/HTTPトランスポート** - リアルタイム通信対応
+- **OAuth 2.0認証** - セキュアな認証フロー
+- **自動更新** - ベンダー管理による常に最新の状態
+- 詳細は`REMOTE_MCP_SERVERS.md`参照
 
 ### Headlessモード
 CI/CDでの自動実行に対応：
@@ -59,6 +68,13 @@ CI/CDでの自動実行に対応：
 - **aws/gcp/azure** - クラウドサービス統合
 - **docker/kubernetes** - コンテナ管理
 
+### 🌐 リモートMCPサーバー（クラウドホスト型）
+- **Linear** - 課題管理とプロジェクト追跡（SSE）
+- **Notion** - ナレッジベースとワークスペース（HTTP + OAuth）
+- **Sentry** - エラー追跡とパフォーマンス監視（SSE）
+- **Apidog** - API ドキュメントとテスト（HTTP）
+- **SimpleScraper** - Webスクレイピングサービス（SSE）
+
 ## 開発環境
 - Python 3.11+
 - Node.js 18+
@@ -69,13 +85,21 @@ CI/CDでの自動実行に対応：
 
 ### MCPセットアップ
 ```bash
-# MCPサーバーのインストール
+# ローカルMCPサーバーのインストール
 cd mcp-config
 bash setup-mcp.sh
+
+# リモートMCPサーバーの設定
+./scripts/setup-remote-mcp.sh
 
 # 環境変数の設定
 cp .env.mcp.example .env.mcp
 # .env.mcpファイルを編集してAPIキーを設定
+
+# リモートサーバー管理
+./scripts/mcp-remote-manager.sh list    # サーバー一覧
+./scripts/mcp-remote-manager.sh test    # 接続テスト
+./scripts/mcp-remote-manager.sh profile hybrid  # ハイブリッドプロファイル適用
 ```
 
 ### 環境セットアップ

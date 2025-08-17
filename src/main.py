@@ -163,10 +163,10 @@ class Application:
 def calculate_sum(numbers: List[float]) -> float:
     """
     数値のリストの合計を計算する
-    
+
     Args:
         numbers: 合計する数値のリスト
-        
+
     Returns:
         数値の合計
     """
@@ -176,16 +176,16 @@ def calculate_sum(numbers: List[float]) -> float:
 def validate_email(email: str) -> bool:
     """
     メールアドレスの形式を検証する
-    
+
     Args:
         email: 検証するメールアドレス
-        
+
     Returns:
         有効な形式の場合True、そうでない場合False
     """
     if not email:
         return False
-    
+
     # 簡単なメールアドレスの正規表現パターン
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return bool(re.match(pattern, email))
@@ -272,7 +272,7 @@ def sum_command(numbers):
     if not numbers:
         console.print("[yellow]No numbers provided[/yellow]")
         return
-    
+
     result = calculate_sum(list(numbers))
     console.print(f"[green]Sum: {result}[/green]")
 

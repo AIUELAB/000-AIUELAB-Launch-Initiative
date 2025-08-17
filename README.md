@@ -6,7 +6,8 @@
 
 ### 🎯 2025年最新機能（完全実装済み）
 - ✅ **スラッシュコマンド対応** - `.claude/commands/`に5つの基本コマンド実装済み
-- ✅ **MCPプロファイル切り替え** - minimal/standard/fullの3段階設定
+- ✅ **MCPプロファイル切り替え** - minimal/standard/remote/hybrid/fullの5段階設定
+- ✅ **リモートMCPサーバー対応** - SSE/HTTPトランスポート、OAuth 2.0認証サポート
 - ✅ **Headlessモード強化** - `scripts/claude-ci.sh`でCI/CD完全統合
 - ✅ **Docker隔離環境** - 安全な`--dangerously-skip-permissions`実行
 - ✅ **GitHub Actions統合** - 自動レビュー・修正・セキュリティ分析
@@ -69,6 +70,15 @@
 - aws/gcp/azure - クラウドサービス
 - docker/kubernetes - コンテナ管理
 
+### 🌐 リモートMCPサーバー（クラウドホスト型）
+| サーバー | 機能 | トランスポート | 認証 |
+|---------|------|---------------|------|
+| Linear | 課題管理・プロジェクト追跡 | SSE | Bearer Token |
+| Notion | ナレッジベース・ワークスペース | HTTP | OAuth 2.0 |
+| Sentry | エラー追跡・パフォーマンス監視 | SSE | Bearer Token |
+| Apidog | API ドキュメント・テスト | HTTP | API Key |
+| SimpleScraper | Webスクレイピングサービス | SSE | API Key |
+
 ## 🔧 クイックスタート
 
 ### 1. テンプレートをコピー
@@ -88,7 +98,19 @@ bash setup-mcp.sh
 # ※ Serenaを有効にする場合は'y'を選択
 ```
 
-### 3. APIキーの設定
+### 3. リモートMCPサーバーのセットアップ（オプション）
+
+```bash
+# リモートサーバーを設定
+./scripts/setup-remote-mcp.sh
+
+# またはCLIで管理
+./scripts/mcp-remote-manager.sh add linear  # Linear追加
+./scripts/mcp-remote-manager.sh test       # 接続テスト
+./scripts/mcp-remote-manager.sh profile hybrid  # ハイブリッドプロファイル適用
+```
+
+### 4. APIキーの設定
 
 ```bash
 # 環境変数ファイルを作成
@@ -98,12 +120,16 @@ cp .env.mcp.example .env.mcp
 # 必須:
 #   - GITHUB_TOKEN (GitHub統合用)
 #   - BRAVE_API_KEY (Web検索用)
+# リモートサーバー用:
+#   - LINEAR_API_KEY
+#   - NOTION_CLIENT_ID/SECRET
+#   - SENTRY_AUTH_TOKEN
 # オプショナル:
 #   - FIRECRAWL_API_KEY
 #   - その他のサービスのキー
 ```
 
-### 4. Python環境のセットアップ
+### 5. Python環境のセットアップ
 
 ```bash
 # 仮想環境を作成
@@ -115,11 +141,11 @@ source venv/bin/activate  # macOS/Linux
 pip install -r requirements.txt
 ```
 
-### 5. Claude Desktopの設定
+### 6. Claude Desktopの設定
 
 ```bash
-# MCPプロファイルを選択（minimal/standard/full）
-./scripts/mcp-profile-switch.sh standard
+# MCPプロファイルを選択（minimal/standard/remote/hybrid/full）
+./scripts/mcp-profile-switch.sh hybrid  # ローカル+リモートの併用推奨
 
 # または手動で設定をコピー
 # macOSの場合

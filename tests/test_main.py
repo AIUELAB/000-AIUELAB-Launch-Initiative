@@ -55,11 +55,7 @@ class TestApplication:
     def app_config(self):
         """テスト用のAppConfigを作成"""
         return AppConfig(
-            app_name="Test App", 
-            version="1.0.0", 
-            debug=False, 
-            environment="test",
-            mcp_enabled=False
+            app_name="Test App", version="1.0.0", debug=False, environment="test", mcp_enabled=False
         )
 
     @pytest.fixture
