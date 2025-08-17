@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "github": {
+      "command": "./bin/github-mcp-wrapper.sh",
+      "args": ["stdio", "--dynamic-toolsets"],
+      "env": {
+        "GITHUB_DEFAULT_TOOLSET": "code,issues,repos"
+      }
+    }
+  }
+}

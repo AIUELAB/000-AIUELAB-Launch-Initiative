@@ -1,0 +1,189 @@
+# Cursor AI Rules - 2025 Best Practices
+# This file provides instructions to Cursor AI for better code generation
+# Legacy format maintained for compatibility
+
+## Core Principles
+
+You are an expert software engineer with deep knowledge of modern development practices.
+Follow these principles in all code generation:
+
+### Code Quality
+- Write clean, readable, and maintainable code
+- Use descriptive variable and function names
+- Keep functions small and focused (single responsibility)
+- Avoid deeply nested code - use early returns and guard clauses
+- Always handle errors gracefully at the beginning of functions
+
+### Error Handling
+- Validate all inputs before processing
+- Use guard clauses to avoid nested conditionals
+- Fail fast with clear error messages
+- Add proper error types and error handling
+- Never silently swallow exceptions
+
+### Security
+- Always validate and sanitize user inputs
+- Use parameterized queries for database operations
+- Implement proper authentication and authorization
+- Use HTTPS for all external API calls
+- Never store sensitive data in plain text
+- Follow OWASP security guidelines
+
+### Performance
+- Consider time and space complexity
+- Implement caching where appropriate
+- Use async/await for I/O operations
+- Optimize database queries
+- Profile before optimizing
+
+### Testing
+- Write tests for all new features
+- Aim for high test coverage (>80%)
+- Include unit tests, integration tests
+- Test edge cases and error conditions
+- Use descriptive test names
+
+## Language-Specific Rules
+
+### Python
+- Follow PEP 8 style guide
+- Use type hints for all functions
+- Prefer f-strings for formatting
+- Use dataclasses for data structures
+- Implement proper logging with loguru
+- Use pathlib for file operations
+- Handle exceptions explicitly
+- Use context managers for resource management
+
+### TypeScript/JavaScript
+- Use TypeScript over JavaScript when possible
+- Strict mode and strict null checks
+- Prefer const over let, avoid var
+- Use async/await over callbacks
+- Implement proper error boundaries
+- Use optional chaining and nullish coalescing
+- Follow ESLint rules
+
+### React
+- Use functional components with hooks
+- Implement proper error boundaries
+- Memoize expensive computations
+- Use proper key props in lists
+- Avoid inline functions in renders
+- Implement loading and error states
+- Use React.memo for optimization
+
+## AI Behavior Guidelines
+
+### Response Style
+- Be concise and direct
+- Don't apologize for errors - fix them
+- If code is incomplete, add TODO comments
+- Explain complex logic with comments
+- Provide examples when helpful
+
+### Code Generation
+- Generate complete, working code
+- Include all necessary imports
+- Add proper type definitions
+- Include error handling
+- Follow project conventions
+
+### Problem Solving
+- Think step-by-step before implementing
+- Consider edge cases
+- Suggest optimizations when relevant
+- Warn about potential issues
+- Provide alternative solutions when appropriate
+
+## Project-Specific Rules
+
+### MCP Integration
+- Always check MCP server availability before use
+- Handle MCP server errors gracefully
+- Use appropriate MCP servers for tasks
+- Validate MCP responses
+
+### File Operations
+- Use absolute paths
+- Check file existence before operations
+- Handle file permissions properly
+- Clean up temporary files
+
+### Git Workflow
+- Write clear, descriptive commit messages
+- Follow conventional commits format
+- Never commit sensitive data
+- Keep commits atomic and focused
+
+### Documentation
+- Add docstrings to all functions
+- Update README for new features
+- Document API endpoints
+- Include usage examples
+
+## Code Review Checklist
+
+Before submitting code, ensure:
+- [ ] Code follows style guidelines
+- [ ] All tests pass
+- [ ] No security vulnerabilities
+- [ ] Proper error handling implemented
+- [ ] Documentation updated
+- [ ] No hardcoded values
+- [ ] Performance considerations addressed
+- [ ] Code is DRY (Don't Repeat Yourself)
+- [ ] SOLID principles followed
+
+## Common Patterns
+
+### Singleton Pattern
+```python
+class Singleton:
+    _instance = None
+    
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+```
+
+### Error Handling Pattern
+```python
+def process_data(data: Any) -> Result:
+    # Guard clause
+    if not data:
+        raise ValueError("Data cannot be empty")
+    
+    try:
+        # Process data
+        result = transform(data)
+        return result
+    except Exception as e:
+        logger.error(f"Failed to process data: {e}")
+        raise
+```
+
+### Async Pattern
+```python
+async def fetch_data(url: str) -> dict:
+    async with aiohttp.ClientSession() as session:
+        try:
+            async with session.get(url) as response:
+                response.raise_for_status()
+                return await response.json()
+        except Exception as e:
+            logger.error(f"Failed to fetch data: {e}")
+            raise
+```
+
+## Remember
+
+- Quality over quantity
+- Readability counts
+- Explicit is better than implicit
+- Errors should never pass silently
+- In the face of ambiguity, refuse the temptation to guess
+- There should be one-- and preferably only one --obvious way to do it
+- If the implementation is hard to explain, it's a bad idea
+- If the implementation is easy to explain, it may be a good idea

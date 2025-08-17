@@ -1,0 +1,82 @@
+# CODEOWNERS file for automatic review assignments
+# Each line is a file pattern followed by one or more owners.
+
+# Default owners for everything in the repo
+* @default-team
+
+# Python code
+*.py @python-team
+/src/ @python-team @backend-team
+/tests/ @python-team @qa-team
+
+# JavaScript/TypeScript
+*.js @frontend-team
+*.jsx @frontend-team
+*.ts @frontend-team
+*.tsx @frontend-team
+
+# Configuration files
+*.json @devops-team
+*.yaml @devops-team
+*.yml @devops-team
+.env* @security-team @devops-team
+
+# Documentation
+*.md @documentation-team
+/docs/ @documentation-team
+README.md @documentation-team @product-team
+CLAUDE.md @ai-team @documentation-team
+
+# Security-sensitive files
+/scripts/load-keys.sh @security-team
+/scripts/load_keys.py @security-team
+/scripts/check_no_secrets.py @security-team
+/config/keys.json @security-team
+.cursorrules @ai-team @security-team
+/.cursor/ @ai-team @security-team
+
+# CI/CD
+/.github/workflows/ @devops-team @security-team
+/.github/actions/ @devops-team
+/.github/dependabot.yml @devops-team @security-team
+/.github/CODEOWNERS @admin-team
+
+# Docker
+Dockerfile @devops-team @security-team
+docker-compose.yml @devops-team
+.dockerignore @devops-team
+
+# MCP Configuration
+/mcp-config/ @ai-team @backend-team
+*.mcp.json @ai-team
+*.mdc @ai-team
+
+# Testing
+/tests/ @qa-team @python-team
+*.test.js @qa-team @frontend-team
+*.spec.ts @qa-team @frontend-team
+
+# Build and deployment
+Makefile @devops-team
+/scripts/setup*.sh @devops-team
+requirements*.txt @python-team @security-team
+package*.json @frontend-team @security-team
+
+# VSCode/Cursor configuration
+/.vscode/ @dev-team
+.editorconfig @dev-team
+
+# Git configuration
+.gitignore @dev-team
+.gitattributes @dev-team
+.pre-commit-config.yaml @dev-team @security-team
+
+# Legal
+LICENSE @legal-team @admin-team
+NOTICE @legal-team
+SECURITY.md @security-team
+
+# Project management
+.github/ISSUE_TEMPLATE/ @product-team
+.github/PULL_REQUEST_TEMPLATE/ @product-team
+CONTRIBUTING.md @dev-team @product-team

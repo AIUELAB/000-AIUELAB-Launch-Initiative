@@ -1,0 +1,224 @@
+name: Claude Code CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      claude_command:
+        description: 'Claude Code command to execute'
+        required: false
+        default: 'review code and suggest improvements'
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '22'
+  CLAUDE_HEADLESS: true
+
+jobs:
+  code-quality:
+    name: Code Quality Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+    
+    - name: Cache dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/pip
+          ~/.npm
+          venv
+        key: ${{ runner.os }}-deps-${{ hashFiles('requirements.txt', 'package.json') }}
+    
+    - name: Install Python dependencies
+      run: |
+        python -m venv venv
+        source venv/bin/activate
+        pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Install Claude Code
+      run: npm install -g @anthropic/claude-cli
+    
+    - name: Run linting
+      run: |
+        source venv/bin/activate
+        make lint
+    
+    - name: Run type checking
+      run: |
+        source venv/bin/activate
+        make type-check
+    
+    - name: Run tests
+      run: |
+        source venv/bin/activate
+        make test
+
+  claude-review:
+    name: Claude Code Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    needs: code-quality
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch all history for proper diff
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+    
+    - name: Install Claude Code
+      run: npm install -g @anthropic/claude-cli
+    
+    - name: Get changed files
+      id: changed-files
+      run: |
+        echo "files=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | tr '\n' ' ')" >> $GITHUB_OUTPUT
+    
+    - name: Claude Code Review
+      env:
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      run: |
+        claude -p "Review the following changed files and provide feedback: ${{ steps.changed-files.outputs.files }}" \
+          --output-format json \
+          --dangerously-skip-permissions > review.json
+    
+    - name: Post review comment
+      if: always()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          try {
+            const review = JSON.parse(fs.readFileSync('review.json', 'utf8'));
+            await github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: context.issue.number,
+              body: `## 🤖 Claude Code Review\n\n${review.content || review.message || 'Review completed'}`
+            });
+          } catch (error) {
+            console.error('Failed to post review:', error);
+          }
+
+  claude-fix:
+    name: Claude Auto-Fix
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up environment
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+    
+    - name: Install dependencies
+      run: |
+        python -m venv venv
+        source venv/bin/activate
+        pip install -r requirements.txt
+        npm install -g @anthropic/claude-cli
+    
+    - name: Run Claude Command
+      env:
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        ./scripts/claude-ci.sh \
+          -c "${{ github.event.inputs.claude_command }}" \
+          -o stream-json \
+          -s \
+          -t 600
+    
+    - name: Commit changes
+      if: success()
+      run: |
+        git config --local user.email "claude-bot@example.com"
+        git config --local user.name "Claude Bot"
+        git add -A
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "🤖 Claude auto-fix: ${{ github.event.inputs.claude_command }}"
+          git push
+        fi
+
+  security-scan:
+    name: Security Scan with Claude
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Run security scan
+      run: |
+        # Traditional security scanning
+        pip install bandit safety
+        bandit -r src/ -f json -o bandit-report.json || true
+        safety check --json > safety-report.json || true
+    
+    - name: Claude Security Analysis
+      if: always()
+      env:
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      run: |
+        claude -p "Analyze these security reports and provide recommendations: $(cat bandit-report.json safety-report.json)" \
+          --output-format json \
+          --dangerously-skip-permissions > security-analysis.json
+    
+    - name: Upload security reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-reports
+        path: |
+          *-report.json
+          security-analysis.json
+
+  deploy-docs:
+    name: Deploy Documentation
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [code-quality, security-scan]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Generate documentation with Claude
+      env:
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      run: |
+        claude -p "Generate comprehensive API documentation for all Python modules in src/" \
+          --output-format markdown \
+          --dangerously-skip-permissions > API_DOCS.md
+    
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./docs
+        publish_branch: gh-pages

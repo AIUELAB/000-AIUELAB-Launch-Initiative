@@ -1,0 +1,568 @@
+# Refresh Rules for Cursor AI
+# Guidelines for debugging, fixing issues, and recovering from errors
+
+## 🔍 Debugging Strategy
+
+### Systematic Approach
+When something isn't working:
+1. **Reproduce the issue** - Confirm the problem exists
+2. **Isolate the cause** - Narrow down the source
+3. **Understand the root cause** - Don't just fix symptoms
+4. **Implement the fix** - Address the root cause
+5. **Verify the solution** - Ensure it's actually fixed
+6. **Prevent recurrence** - Add tests or validation
+
+### Debug Checklist
+```markdown
+## Issue: [Description]
+- [ ] Error reproduced consistently
+- [ ] Error message captured
+- [ ] Stack trace analyzed
+- [ ] Related logs reviewed
+- [ ] Recent changes identified
+- [ ] Dependencies checked
+- [ ] Environment verified
+- [ ] Fix implemented
+- [ ] Tests added
+- [ ] Documentation updated
+```
+
+## 🩺 Diagnostic Tools
+
+### Error Analysis Template
+```python
+def diagnose_error(error: Exception, context: dict) -> dict:
+    """
+    Comprehensive error diagnosis
+    """
+    diagnosis = {
+        "error_type": type(error).__name__,
+        "error_message": str(error),
+        "timestamp": datetime.now().isoformat(),
+        "context": context,
+        "stack_trace": traceback.format_exc(),
+        "system_info": {
+            "python_version": sys.version,
+            "platform": platform.platform(),
+            "memory_usage": get_memory_usage(),
+            "disk_space": get_disk_space()
+        }
+    }
+    
+    # Add specific diagnostics based on error type
+    if isinstance(error, DatabaseError):
+        diagnosis["db_status"] = check_database_connection()
+        diagnosis["query"] = context.get("last_query")
+    elif isinstance(error, NetworkError):
+        diagnosis["network_status"] = check_network_connectivity()
+        diagnosis["endpoint"] = context.get("endpoint")
+    
+    return diagnosis
+```
+
+### Logging for Debugging
+```python
+import logging
+import json
+from functools import wraps
+
+# Configure detailed logging for debugging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s'
+)
+
+def debug_trace(func):
+    """Decorator to trace function execution"""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        logger = logging.getLogger(func.__module__)
+        
+        # Log entry
+        logger.debug(f"Entering {func.__name__}")
+        logger.debug(f"Args: {args}")
+        logger.debug(f"Kwargs: {kwargs}")
+        
+        try:
+            # Execute function
+            result = func(*args, **kwargs)
+            
+            # Log successful execution
+            logger.debug(f"Exiting {func.__name__} successfully")
+            logger.debug(f"Result: {result}")
+            
+            return result
+        except Exception as e:
+            # Log error details
+            logger.error(f"Error in {func.__name__}: {e}")
+            logger.error(f"Stack trace: {traceback.format_exc()}")
+            raise
+    
+    return wrapper
+```
+
+## 🔧 Common Issues & Solutions
+
+### Database Issues
+
+#### Connection Errors
+```python
+def fix_database_connection():
+    """
+    Fix database connection issues
+    """
+    issues_to_check = [
+        ("Connection string", validate_connection_string),
+        ("Network connectivity", check_network_to_db),
+        ("Database server status", check_db_server_status),
+        ("Authentication", verify_db_credentials),
+        ("Connection pool", reset_connection_pool),
+        ("Firewall rules", check_firewall_rules)
+    ]
+    
+    for issue_name, check_function in issues_to_check:
+        print(f"Checking: {issue_name}")
+        try:
+            result = check_function()
+            if not result.success:
+                print(f"  ❌ Issue found: {result.message}")
+                result.fix()
+                print(f"  ✅ Fixed: {result.fix_message}")
+        except Exception as e:
+            print(f"  ⚠️ Could not check: {e}")
+```
+
+#### Query Performance
+```python
+def optimize_slow_query(query: str) -> str:
+    """
+    Optimize slow database queries
+    """
+    optimizations = []
+    
+    # Check for missing indexes
+    if "WHERE" in query and not has_index(query):
+        optimizations.append("Add index on WHERE clause columns")
+    
+    # Check for SELECT *
+    if "SELECT *" in query:
+        optimizations.append("Specify only needed columns")
+    
+    # Check for N+1 queries
+    if detect_n_plus_one(query):
+        optimizations.append("Use JOIN or eager loading")
+    
+    # Check for missing LIMIT
+    if "LIMIT" not in query:
+        optimizations.append("Add LIMIT clause for large results")
+    
+    return optimizations
+```
+
+### API Issues
+
+#### Rate Limiting
+```python
+class RateLimitHandler:
+    """Handle API rate limit issues"""
+    
+    def __init__(self, max_retries: int = 3):
+        self.max_retries = max_retries
+        
+    async def handle_rate_limit(self, response):
+        """Handle rate limit response"""
+        if response.status_code == 429:
+            retry_after = int(response.headers.get('Retry-After', 60))
+            
+            for attempt in range(self.max_retries):
+                wait_time = retry_after * (2 ** attempt)  # Exponential backoff
+                logger.warning(f"Rate limited. Waiting {wait_time}s (attempt {attempt + 1}/{self.max_retries})")
+                
+                await asyncio.sleep(wait_time)
+                
+                # Retry request
+                new_response = await self.retry_request(response.request)
+                if new_response.status_code != 429:
+                    return new_response
+            
+            raise RateLimitExceeded("Max retries exceeded")
+```
+
+#### Timeout Issues
+```python
+def fix_timeout_issues(func):
+    """Fix timeout issues with retry and timeout adjustment"""
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        timeouts = [5, 10, 30, 60]  # Progressive timeout increases
+        
+        for timeout in timeouts:
+            try:
+                # Set timeout for this attempt
+                return await asyncio.wait_for(
+                    func(*args, **kwargs),
+                    timeout=timeout
+                )
+            except asyncio.TimeoutError:
+                logger.warning(f"Timeout after {timeout}s, retrying with longer timeout")
+                continue
+            except Exception as e:
+                logger.error(f"Non-timeout error: {e}")
+                raise
+        
+        raise TimeoutError(f"Failed after trying timeouts up to {timeouts[-1]}s")
+    
+    return wrapper
+```
+
+### Memory Issues
+
+#### Memory Leak Detection
+```python
+import gc
+import tracemalloc
+from memory_profiler import profile
+
+class MemoryDebugger:
+    """Debug memory issues"""
+    
+    def __init__(self):
+        tracemalloc.start()
+        self.snapshots = []
+    
+    def take_snapshot(self, label: str):
+        """Take memory snapshot"""
+        snapshot = tracemalloc.take_snapshot()
+        self.snapshots.append((label, snapshot))
+        
+        # Force garbage collection
+        gc.collect()
+        
+        # Log memory usage
+        current, peak = tracemalloc.get_traced_memory()
+        logger.info(f"Memory snapshot '{label}': current={current/1024/1024:.1f}MB, peak={peak/1024/1024:.1f}MB")
+    
+    def compare_snapshots(self, label1: str, label2: str):
+        """Compare two snapshots to find leaks"""
+        snap1 = next(s for l, s in self.snapshots if l == label1)
+        snap2 = next(s for l, s in self.snapshots if l == label2)
+        
+        top_stats = snap2.compare_to(snap1, 'lineno')
+        
+        print(f"\nTop 10 memory increases between '{label1}' and '{label2}':")
+        for stat in top_stats[:10]:
+            print(stat)
+    
+    @profile
+    def profile_function(self, func, *args, **kwargs):
+        """Profile memory usage of a function"""
+        self.take_snapshot("before")
+        result = func(*args, **kwargs)
+        self.take_snapshot("after")
+        self.compare_snapshots("before", "after")
+        return result
+```
+
+### Performance Issues
+
+#### Profiling Code
+```python
+import cProfile
+import pstats
+from io import StringIO
+
+def profile_performance(func):
+    """Profile function performance"""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        profiler = cProfile.Profile()
+        profiler.enable()
+        
+        try:
+            result = func(*args, **kwargs)
+        finally:
+            profiler.disable()
+            
+            # Generate report
+            stream = StringIO()
+            stats = pstats.Stats(profiler, stream=stream)
+            stats.sort_stats('cumulative')
+            stats.print_stats(20)  # Top 20 functions
+            
+            logger.info(f"Performance profile for {func.__name__}:\n{stream.getvalue()}")
+        
+        return result
+    
+    return wrapper
+```
+
+#### Optimization Checklist
+```python
+def performance_audit(code_module):
+    """Audit code for performance issues"""
+    issues = []
+    
+    # Check for inefficient loops
+    if has_nested_loops(code_module):
+        issues.append("Nested loops detected - consider optimization")
+    
+    # Check for repeated calculations
+    if has_repeated_calculations(code_module):
+        issues.append("Repeated calculations - consider caching")
+    
+    # Check for synchronous I/O in async context
+    if has_sync_io_in_async(code_module):
+        issues.append("Synchronous I/O in async function - use async alternatives")
+    
+    # Check for large data in memory
+    if loads_large_data_in_memory(code_module):
+        issues.append("Large data loaded in memory - consider streaming")
+    
+    # Check for missing indexes
+    if has_unindexed_queries(code_module):
+        issues.append("Database queries without indexes")
+    
+    return issues
+```
+
+## 🔄 Recovery Procedures
+
+### Service Recovery
+```python
+class ServiceRecovery:
+    """Automated service recovery procedures"""
+    
+    async def recover_service(self, service_name: str):
+        """Attempt to recover a failed service"""
+        recovery_steps = [
+            ("Check service status", self.check_status),
+            ("Restart service", self.restart_service),
+            ("Clear cache", self.clear_cache),
+            ("Reset connections", self.reset_connections),
+            ("Restore from backup", self.restore_backup),
+            ("Failover to backup", self.failover)
+        ]
+        
+        for step_name, step_func in recovery_steps:
+            logger.info(f"Recovery step: {step_name}")
+            try:
+                success = await step_func(service_name)
+                if success:
+                    logger.info(f"✅ Service recovered at step: {step_name}")
+                    return True
+            except Exception as e:
+                logger.error(f"❌ Step failed: {step_name} - {e}")
+                continue
+        
+        logger.critical(f"⚠️ All recovery attempts failed for {service_name}")
+        return False
+```
+
+### Data Recovery
+```python
+class DataRecovery:
+    """Data recovery procedures"""
+    
+    def recover_corrupted_data(self, data_source: str):
+        """Recover from data corruption"""
+        recovery_options = [
+            self.restore_from_backup,
+            self.reconstruct_from_logs,
+            self.repair_with_validation,
+            self.partial_recovery
+        ]
+        
+        for option in recovery_options:
+            try:
+                recovered_data = option(data_source)
+                if self.validate_data(recovered_data):
+                    logger.info(f"Data recovered using {option.__name__}")
+                    return recovered_data
+            except Exception as e:
+                logger.error(f"Recovery option {option.__name__} failed: {e}")
+                continue
+        
+        raise DataRecoveryError(f"Unable to recover data from {data_source}")
+```
+
+## 🛠️ Fix Templates
+
+### Quick Fix Patterns
+```python
+# Fix: Null/None handling
+def safe_access(obj, *attrs, default=None):
+    """Safely access nested attributes"""
+    for attr in attrs:
+        try:
+            obj = getattr(obj, attr)
+        except (AttributeError, TypeError):
+            return default
+    return obj
+
+# Fix: Type conversion errors
+def safe_convert(value, target_type, default=None):
+    """Safely convert types"""
+    try:
+        return target_type(value)
+    except (ValueError, TypeError):
+        return default
+
+# Fix: Division by zero
+def safe_divide(numerator, denominator, default=0):
+    """Safely divide numbers"""
+    try:
+        return numerator / denominator if denominator != 0 else default
+    except (ZeroDivisionError, TypeError):
+        return default
+
+# Fix: List index out of range
+def safe_index(lst, index, default=None):
+    """Safely access list index"""
+    try:
+        return lst[index]
+    except (IndexError, TypeError):
+        return default
+
+# Fix: Dictionary key errors
+def safe_get(dictionary, key, default=None):
+    """Safely get dictionary value"""
+    if not isinstance(dictionary, dict):
+        return default
+    return dictionary.get(key, default)
+```
+
+### Validation Fixes
+```python
+def fix_validation_errors(data: dict) -> dict:
+    """Fix common validation errors in data"""
+    fixed_data = data.copy()
+    
+    # Fix missing required fields
+    required_fields = ['id', 'name', 'created_at']
+    for field in required_fields:
+        if field not in fixed_data:
+            fixed_data[field] = generate_default(field)
+    
+    # Fix invalid types
+    type_map = {
+        'id': int,
+        'name': str,
+        'created_at': datetime
+    }
+    for field, expected_type in type_map.items():
+        if field in fixed_data:
+            fixed_data[field] = safe_convert(
+                fixed_data[field], 
+                expected_type,
+                default=generate_default(field)
+            )
+    
+    # Fix invalid formats
+    if 'email' in fixed_data:
+        fixed_data['email'] = fix_email_format(fixed_data['email'])
+    
+    if 'phone' in fixed_data:
+        fixed_data['phone'] = fix_phone_format(fixed_data['phone'])
+    
+    return fixed_data
+```
+
+## 📊 Health Checks
+
+### System Health Monitor
+```python
+class HealthMonitor:
+    """Monitor system health and auto-fix issues"""
+    
+    def __init__(self):
+        self.checks = [
+            ("Database", self.check_database),
+            ("API", self.check_api),
+            ("Cache", self.check_cache),
+            ("Queue", self.check_queue),
+            ("Storage", self.check_storage),
+            ("Memory", self.check_memory),
+            ("CPU", self.check_cpu)
+        ]
+    
+    async def run_health_check(self) -> dict:
+        """Run all health checks"""
+        results = {}
+        
+        for name, check_func in self.checks:
+            try:
+                status = await check_func()
+                results[name] = {
+                    "status": "healthy" if status.is_healthy else "unhealthy",
+                    "message": status.message,
+                    "metrics": status.metrics
+                }
+                
+                # Auto-fix if unhealthy
+                if not status.is_healthy:
+                    fix_result = await self.auto_fix(name, status)
+                    results[name]["fix_attempted"] = True
+                    results[name]["fix_result"] = fix_result
+                    
+            except Exception as e:
+                results[name] = {
+                    "status": "error",
+                    "message": str(e)
+                }
+        
+        return results
+```
+
+## 💡 Debug Tips
+
+### Print Debugging Enhanced
+```python
+def debug_print(*args, **kwargs):
+    """Enhanced print debugging"""
+    import inspect
+    
+    frame = inspect.currentframe()
+    caller = inspect.getframeinfo(frame.f_back)
+    
+    print(f"[DEBUG {caller.filename}:{caller.lineno}]", *args, **kwargs)
+    
+    # Also log to file
+    with open("debug.log", "a") as f:
+        f.write(f"[{datetime.now()}] {caller.filename}:{caller.lineno} - {args} {kwargs}\n")
+
+# Usage: debug_print("Variable value:", variable)
+```
+
+### State Inspection
+```python
+def inspect_state(obj, depth=2):
+    """Deep inspection of object state"""
+    import pprint
+    
+    pp = pprint.PrettyPrinter(indent=2, depth=depth)
+    
+    print(f"\n{'='*50}")
+    print(f"Object Type: {type(obj)}")
+    print(f"Object ID: {id(obj)}")
+    
+    if hasattr(obj, '__dict__'):
+        print(f"Attributes:")
+        pp.pprint(obj.__dict__)
+    
+    if hasattr(obj, '__class__'):
+        print(f"Methods:")
+        methods = [m for m in dir(obj) if callable(getattr(obj, m)) and not m.startswith('_')]
+        pp.pprint(methods)
+    
+    print(f"{'='*50}\n")
+```
+
+## 🎯 Remember When Debugging
+
+1. **Stay calm** - Panicking makes debugging harder
+2. **Be systematic** - Follow a methodical approach
+3. **Document findings** - Keep notes as you debug
+4. **Test hypotheses** - Don't assume, verify
+5. **Ask for help** - Fresh eyes often spot issues quickly
+6. **Learn from it** - Every bug is a learning opportunity
+7. **Prevent recurrence** - Add tests to catch it next time
