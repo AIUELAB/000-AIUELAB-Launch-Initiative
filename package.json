@@ -1,22 +1,24 @@
 {
-  "name": "claude-code-template",
-  "version": "1.0.0",
-  "description": "Claude Code Template with MCP Servers",
-  "private": true,
-  "scripts": {
-    "install-mcp": "npm install -g @modelcontextprotocol/server-filesystem @modelcontextprotocol/server-github @modelcontextprotocol/server-fetch",
-    "install-mcp-extra": "npm install -g @modelcontextprotocol/server-memory @modelcontextprotocol/server-sequential-thinking @modelcontextprotocol/server-puppeteer",
-    "update-mcp": "npm update -g @modelcontextprotocol/server-*",
-    "list-mcp": "npm list -g --depth=0 | grep @modelcontextprotocol"
-  },
-  "devDependencies": {
-    "@types/node": "^22.0.0",
-    "prettier": "^3.3.3"
-  },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^0.9.0"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  }
+    "name": "claude-code-template-mcp",
+    "version": "2.0.0",
+    "description": "Claude Code Template with MCP Servers (2025年版)",
+    "private": true,
+    "scripts": {
+        "install-mcp": "npm install -g @modelcontextprotocol/server-filesystem @modelcontextprotocol/server-github @modelcontextprotocol/server-fetch",
+        "install-mcp-extra": "npm install -g @modelcontextprotocol/server-memory @modelcontextprotocol/server-sequential-thinking @modelcontextprotocol/server-puppeteer",
+        "update-mcp": "npm update -g @modelcontextprotocol/server-*",
+        "list-mcp": "npm list -g --depth=0 | grep @modelcontextprotocol",
+        "docs": "mkdocs serve",
+        "docs-build": "mkdocs build",
+        "n8n:start": "docker compose -f docker-compose.n8n.yml --env-file .env.n8n up -d",
+        "n8n:stop": "docker compose -f docker-compose.n8n.yml --env-file .env.n8n down",
+        "n8n:logs": "docker compose -f docker-compose.n8n.yml --env-file .env.n8n logs -f n8n",
+        "n8n:reset": "docker compose -f docker-compose.n8n.yml --env-file .env.n8n down -v && docker compose -f docker-compose.n8n.yml --env-file .env.n8n up -d"
+    },
+    "dependencies": {
+        "@modelcontextprotocol/sdk": "^0.9.0"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    }
 }

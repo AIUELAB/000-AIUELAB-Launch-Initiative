@@ -7,13 +7,14 @@ It enables AI agents to interact with GitHub repositories, issues, pull requests
 
 import asyncio
 import os
-from typing import List, Optional
 
 from dotenv import load_dotenv
 from langchain_anthropic import ChatAnthropic
+from langchain_core.language_models.base import BaseLanguageModel
 from langchain_openai import ChatOpenAI
 from loguru import logger
 from mcp_use import MCPAgent, MCPClient
+from pydantic import SecretStr
 from rich.console import Console
 from rich.panel import Panel
 
@@ -23,6 +24,21 @@ console = Console()
 # Load environment variables
 load_dotenv()
 
+AGENT_NOT_INITIALIZED = "Agent not initialized. Call setup() first."
+
+
+def _build_openai_llm(model: str, api_key: SecretStr) -> BaseLanguageModel:
+    """Construct ChatOpenAI instance with proper types."""
+    return ChatOpenAI(model=model, api_key=api_key)
+
+
+def _build_anthropic_llm(model: str, api_key: SecretStr) -> BaseLanguageModel:
+    """Construct ChatAnthropic using explicit kwargs; try `model` then `model_name`."""
+    try:
+        return ChatAnthropic(model=model, api_key=api_key)  # type: ignore
+    except TypeError:
+        return ChatAnthropic(model_name=model, api_key=api_key)  # type: ignore
+
 
 class GitHubMCPIntegration:
     """
@@ -31,10 +47,10 @@ class GitHubMCPIntegration:
 
     def __init__(
         self,
-        config_file: Optional[str] = None,
+        config_file: str | None = None,
         llm_provider: str = "openai",
         use_native: bool = True,
-    ):
+    ) -> None:
         """
         Initialize GitHub MCP Integration.
 
@@ -49,14 +65,14 @@ class GitHubMCPIntegration:
                 "github_mcp_config_native.json" if use_native else "github_mcp_config.json"
             )
 
-        self.config_file = config_file
-        self.llm_provider = llm_provider
-        self.use_native = use_native
-        self.client: Optional[MCPClient] = None
-        self.agent: Optional[MCPAgent] = None
-        self.llm = None
+        self.config_file: str = config_file
+        self.llm_provider: str = llm_provider
+        self.use_native: bool = use_native
+        self.client: MCPClient | None = None
+        self.agent: MCPAgent | None = None
+        self.llm: BaseLanguageModel | None = None
 
-    async def setup(self, max_steps: int = 30):
+    def setup(self, max_steps: int = 30) -> None:
         """
         Set up the MCP client and agent.
 
@@ -82,15 +98,14 @@ class GitHubMCPIntegration:
                 api_key = os.getenv("OPENAI_API_KEY")
                 if not api_key:
                     raise ValueError("OPENAI_API_KEY environment variable not set.")
-                self.llm = ChatOpenAI(model="gpt-4o", api_key=api_key)
+                self.llm = _build_openai_llm(model="gpt-4o", api_key=SecretStr(api_key))
             elif self.llm_provider == "anthropic":
                 api_key = os.getenv("ANTHROPIC_API_KEY")
                 if not api_key:
                     raise ValueError("ANTHROPIC_API_KEY environment variable not set.")
                 # Allow overriding model via env var. Example for Opus 4.1: set ANTHROPIC_MODEL to the exact model ID
-                # (e.g., "claude-opus-4.1" or the dated variant provided by Anthropic).
                 anthropic_model = os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-20240620")
-                self.llm = ChatAnthropic(model=anthropic_model, api_key=api_key)
+                self.llm = _build_anthropic_llm(model=anthropic_model, api_key=SecretStr(api_key))
             else:
                 raise ValueError(f"Unsupported LLM provider: {self.llm_provider}")
 
@@ -102,7 +117,12 @@ class GitHubMCPIntegration:
             )
             console.print(
                 Panel.fit(
-                    f"✅ GitHub MCP Integration Ready\nProvider: {self.llm_provider}\nMode: {'Native Binary' if self.use_native else 'Docker'}\nMax Steps: {max_steps}",
+                    (
+                        "✅ GitHub MCP Integration Ready\n"
+                        f"Provider: {self.llm_provider}\n"
+                        f"Mode: {'Native Binary' if self.use_native else 'Docker'}\n"
+                        f"Max Steps: {max_steps}"
+                    ),
                     title="Setup Complete",
                     border_style="green",
                 )
@@ -110,9 +130,7 @@ class GitHubMCPIntegration:
 
         except Exception as e:
             logger.error(f"Failed to setup GitHub MCP: {e}")
-            console.print(
-                Panel.fit(f"❌ Setup Failed: {str(e)}", title="Error", border_style="red")
-            )
+            console.print(Panel.fit(f"❌ Setup Failed: {e!s}", title="Error", border_style="red"))
             raise
 
     async def search_repositories(self, query: str) -> str:
@@ -126,9 +144,12 @@ class GitHubMCPIntegration:
             Search results as a string
         """
         if not self.agent:
-            raise RuntimeError("Agent not initialized. Call setup() first.")
+            raise RuntimeError(AGENT_NOT_INITIALIZED)
 
-        prompt = f"Search GitHub for repositories matching: {query}. Show the top 5 results with name, description, stars, and URL."
+        prompt = (
+            f"Search GitHub for repositories matching: {query}. "
+            "Show the top 5 results with name, description, stars, and URL."
+        )
 
         console.print(f"\n🔍 Searching repositories: {query}")
         result = await self.agent.run(prompt)
@@ -146,9 +167,12 @@ class GitHubMCPIntegration:
             Repository information as a string
         """
         if not self.agent:
-            raise RuntimeError("Agent not initialized. Call setup() first.")
+            raise RuntimeError(AGENT_NOT_INITIALIZED)
 
-        prompt = f"Get detailed information about the GitHub repository {owner}/{repo}, including description, languages, stars, issues count, and recent activity."
+        prompt = (
+            f"Get detailed information about the GitHub repository {owner}/{repo}, "
+            "including description, languages, stars, issues count, and recent activity."
+        )
 
         console.print(f"\n📚 Getting info for: {owner}/{repo}")
         result = await self.agent.run(prompt)
@@ -167,16 +191,19 @@ class GitHubMCPIntegration:
             List of issues as a string
         """
         if not self.agent:
-            raise RuntimeError("Agent not initialized. Call setup() first.")
+            raise RuntimeError(AGENT_NOT_INITIALIZED)
 
-        prompt = f"List {state} issues for the GitHub repository {owner}/{repo}. Show issue number, title, labels, and author."
+        prompt = (
+            f"List {state} issues for the GitHub repository {owner}/{repo}. "
+            "Show issue number, title, labels, and author."
+        )
 
         console.print(f"\n📋 Listing {state} issues for: {owner}/{repo}")
         result = await self.agent.run(prompt)
         return str(result)
 
     async def create_issue(
-        self, owner: str, repo: str, title: str, body: str, labels: Optional[List[str]] = None
+        self, owner: str, repo: str, title: str, body: str, labels: list[str] | None = None
     ) -> str:
         """
         Create a new issue in a repository.
@@ -192,21 +219,22 @@ class GitHubMCPIntegration:
             Created issue information
         """
         if not self.agent:
-            raise RuntimeError("Agent not initialized. Call setup() first.")
+            raise RuntimeError(AGENT_NOT_INITIALIZED)
 
         labels_str = f" with labels {', '.join(labels)}" if labels else ""
-        prompt = f"""Create a new issue in the GitHub repository {owner}/{repo}:
-        Title: {title}
-        Body: {body}
-        {labels_str}
-        """
+        prompt = (
+            f"Create a new issue in the GitHub repository {owner}/{repo}:\n"
+            f"Title: {title}\n"
+            f"Body: {body}\n"
+            f"{labels_str}\n"
+        )
 
-        console.print(f"\n➕ Creating issue in: {owner}/{repo}")
+        console.print(f"\n+ Creating issue in: {owner}/{repo}")
         result = await self.agent.run(prompt)
         return str(result)
 
     async def search_code(
-        self, query: str, language: Optional[str] = None, org: Optional[str] = None
+        self, query: str, language: str | None = None, org: str | None = None
     ) -> str:
         """
         Search for code across GitHub.
@@ -220,9 +248,9 @@ class GitHubMCPIntegration:
             Code search results
         """
         if not self.agent:
-            raise RuntimeError("Agent not initialized. Call setup() first.")
+            raise RuntimeError(AGENT_NOT_INITIALIZED)
 
-        filters = []
+        filters: list[str] = []
         if language:
             filters.append(f"language:{language}")
         if org:
@@ -231,7 +259,10 @@ class GitHubMCPIntegration:
         filter_str = " ".join(filters)
         full_query = f"{query} {filter_str}".strip()
 
-        prompt = f"Search GitHub code for: {full_query}. Show the top 5 results with file path, repository, and a snippet of the matching code."
+        prompt = (
+            f"Search GitHub code for: {full_query}. "
+            "Show the top 5 results with file path, repository, and a snippet of the matching code."
+        )
 
         console.print(f"\n🔎 Searching code: {full_query}")
         result = await self.agent.run(prompt)
@@ -250,9 +281,12 @@ class GitHubMCPIntegration:
             List of pull requests
         """
         if not self.agent:
-            raise RuntimeError("Agent not initialized. Call setup() first.")
+            raise RuntimeError(AGENT_NOT_INITIALIZED)
 
-        prompt = f"List {state} pull requests for the GitHub repository {owner}/{repo}. Show PR number, title, author, and review status."
+        prompt = (
+            f"List {state} pull requests for the GitHub repository {owner}/{repo}. "
+            "Show PR number, title, author, and review status."
+        )
 
         console.print(f"\n🔀 Listing {state} pull requests for: {owner}/{repo}")
         result = await self.agent.run(prompt)
@@ -269,20 +303,20 @@ class GitHubMCPIntegration:
             Query result
         """
         if not self.agent:
-            raise RuntimeError("Agent not initialized. Call setup() first.")
+            raise RuntimeError(AGENT_NOT_INITIALIZED)
 
         console.print(f"\n💡 Running custom query: {query}")
         result = await self.agent.run(query)
         return str(result)
 
-    async def cleanup(self):
+    async def cleanup(self) -> None:
         """Clean up resources."""
         if self.client and self.client.sessions:
             await self.client.close_all_sessions()
             logger.info("Cleaned up MCP sessions")
 
 
-async def main():
+async def main() -> None:
     """
     Example usage of GitHub MCP Integration.
     """
@@ -291,7 +325,7 @@ async def main():
 
     try:
         # Setup the integration
-        await github.setup()
+        github.setup()
 
         # Example: Search for repositories
         console.print(Panel.fit("Example 1: Search Repositories", border_style="blue"))

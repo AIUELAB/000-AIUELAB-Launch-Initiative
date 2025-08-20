@@ -1,12 +1,22 @@
 # Claude Code プロジェクト指示書（MCP対応版）🏆
 
 ## プロジェクト概要
+
 このプロジェクトは**2025年最新ベストプラクティス**に対応したMCP（Model Context Protocol）サーバーが完全統合されたClaude Codeテンプレートです。
+
+## 🆕 最新アップデート (2025年8月)
+
+- **Ollama統合** - 完全無料のローカルLLM対応
+- **MkDocs自動ドキュメント生成** - コードから直接APIドキュメント作成
+- **Ruff統一** - Black/isort/flake8を一つのツールに統合
+- **最適化された依存関係** - 不要なパッケージを削除し高速化
 
 ## 🎯 2025年最新機能
 
 ### スラッシュコマンド
+
 `.claude/commands/`ディレクトリにカスタムコマンドが定義されています：
+
 - `/fix-errors` - エラー修正
 - `/refactor` - リファクタリング
 - `/test` - テスト作成
@@ -14,7 +24,9 @@
 - `/optimize` - パフォーマンス最適化
 
 ### MCPプロファイル
+
 パフォーマンスに応じて選択可能：
+
 - `minimal` - Serenaのみ（最高速）
 - `standard` - 基本開発セット
 - `remote` - リモートサーバーのみ（クラウドネイティブ）
@@ -22,14 +34,18 @@
 - `full` - 全機能有効
 
 ### リモートMCPサーバー（2025年8月追加）
+
 クラウドホスト型MCPサーバーをローカル設定なしで利用可能：
+
 - **SSE/HTTPトランスポート** - リアルタイム通信対応
 - **OAuth 2.0認証** - セキュアな認証フロー
 - **自動更新** - ベンダー管理による常に最新の状態
 - 詳細は`REMOTE_MCP_SERVERS.md`参照
 
 ### Headlessモード
+
 CI/CDでの自動実行に対応：
+
 ```bash
 ./scripts/claude-headless.sh -t test
 ```
@@ -37,6 +53,7 @@ CI/CDでの自動実行に対応：
 ## 🎯 利用可能なMCPサーバー
 
 ### 🌟 Serena - 高度なコード操作サーバー（推奨）
+
 - **セマンティックコード検索** - LSPを使用した高度なコード理解
 - **多言語対応** - Python, TypeScript, Go, Rust, Java, C#, PHP等
 - **コード実行** - シェルコマンドの実行とログ読み取り
@@ -44,12 +61,14 @@ CI/CDでの自動実行に対応：
 - **filesystemの上位互換** - より高度なファイル操作が可能
 
 ### 🔧 Smithery - MCPサーバー管理ツール
+
 - **サーバー管理** - MCPサーバーのインストール/アンインストール/更新
 - **サーバー検索** - SmitheryレジストリからMCPサーバーを探す
 - **サーバー検査** - インストール済みサーバーの詳細情報
 - **開発ツール** - MCPサーバー開発用のホットリロード、ビルド、プレイグラウンド
 
 ### 基本MCPサーバー
+
 - **filesystem** - ファイルシステム操作（Serena使用時は無効推奨）
 - **github** - GitHub統合（Issue、PR、コード検索）
 - **fetch** - Web取得とスクレイピング
@@ -60,6 +79,7 @@ CI/CDでの自動実行に対応：
 - **firecrawl** - 高度なWebスクレイピング
 
 ### 追加MCPサーバー
+
 - **memory** - 長期記憶管理
 - **sequential-thinking** - 順次思考処理
 - **puppeteer** - ブラウザ自動化（代替）
@@ -69,6 +89,7 @@ CI/CDでの自動実行に対応：
 - **docker/kubernetes** - コンテナ管理
 
 ### 🌐 リモートMCPサーバー（クラウドホスト型）
+
 - **Linear** - 課題管理とプロジェクト追跡（SSE）
 - **Notion** - ナレッジベースとワークスペース（HTTP + OAuth）
 - **Sentry** - エラー追跡とパフォーマンス監視（SSE）
@@ -76,6 +97,7 @@ CI/CDでの自動実行に対応：
 - **SimpleScraper** - Webスクレイピングサービス（SSE）
 
 ## 開発環境
+
 - Python 3.11+
 - Node.js 18+
 - 仮想環境: `venv`
@@ -84,6 +106,7 @@ CI/CDでの自動実行に対応：
 ## 重要なコマンド
 
 ### MCPセットアップ
+
 ```bash
 # ローカルMCPサーバーのインストール
 cd mcp-config
@@ -103,6 +126,9 @@ cp .env.mcp.example .env.mcp
 ```
 
 ### 環境セットアップ
+
+#### オプション1: Python仮想環境（開発推奨）
+
 ```bash
 # 仮想環境の作成と有効化
 python3 -m venv venv
@@ -110,18 +136,54 @@ source venv/bin/activate  # macOS/Linux
 # または
 venv\Scripts\activate  # Windows
 
-# 依存関係のインストール
+# 本番用依存関係（Ollama無し）
 pip install -r requirements.txt
+
+# 開発用依存関係（Ollama含む）
+pip install -r requirements-dev.txt
+
+# NPMパッケージ
 npm install  # package.jsonがある場合
 ```
 
-### 開発コマンド
-```bash
-# コードフォーマット
-black src/ tests/
+#### オプション2: Docker（本番環境推奨）✅ 完全解決済み
 
-# リント
-pylint src/ tests/
+```bash
+# Dockerイメージのビルド
+docker build -t claude-code-mcp:latest .
+
+# コンテナの実行
+docker run -it --rm \
+  -v $(pwd):/app \
+  -e OPENAI_API_KEY=$OPENAI_API_KEY \
+  -e ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY \
+  claude-code-mcp:latest
+
+# VS Code Dev Containerとして使用
+# .devcontainer/devcontainer.jsonが設定済み
+# VS Code/Cursorで「Reopen in Container」を選択
+```
+
+#### 依存関係の管理
+
+```bash
+# 本番用: requirements.txt (Ollama無し、Docker対応)
+# 開発用: requirements-dev.txt (Ollama含む、ローカル開発用)
+
+# pyproject.tomlから再生成する場合
+pip-compile pyproject.toml -o requirements.txt
+# または uvを使用
+uv pip compile pyproject.toml -o requirements.txt
+```
+
+### 開発コマンド
+
+```bash
+# コードフォーマット（Ruff統一）
+ruff format src/ tests/
+
+# リント（Ruff統一）
+ruff check src/ tests/
 
 # テスト実行
 pytest tests/
@@ -133,6 +195,7 @@ mypy src/
 ## MCPサーバーの活用例
 
 ### Serenaでの高度なコード操作
+
 ```python
 # セマンティック検索
 # "Serenaで calculate_sum 関数の定義を探して"
@@ -148,25 +211,29 @@ mypy src/
 ```
 
 ### ファイル操作
+
 ```python
 # MCPのfilesystemサーバーを使って、ファイルを読み書き
 # /mcp コマンドでMCPツールを確認
 ```
 
 ### GitHub統合
+
 ```python
 # GitHubのIssueやPRを直接操作
 # コード検索や自動レビューも可能
 ```
 
 ### Web検索とスクレイピング
+
 ```python
 # Brave SearchやFirecrawlを使った情報収集
 # Playwrightでブラウザ自動化
 ```
 
 ## プロジェクト構造
-```
+
+```text
 .
 ├── mcp-config/         # MCP設定とスクリプト
 │   ├── claude_desktop_config.json
@@ -178,13 +245,15 @@ mypy src/
 ```
 
 ## コーディング規約
+
 - PEP 8に準拠
-- Blackでフォーマット
+- Ruffでフォーマット・リント（Black/isort/flake8互換）
 - 型ヒントを積極的に使用
 - docstringは必須（Google Style）
 - MCPサーバーを活用した効率的な開発
 
 ## 注意事項
+
 - コミット前に必ずテストを実行
 - 環境変数は`.env`と`.env.mcp`ファイルで管理
 - センシティブな情報はコミットしない
@@ -193,6 +262,7 @@ mypy src/
 ## よくある作業
 
 ### 新機能の追加
+
 1. `src/`に新しいモジュールを作成
 2. 対応するテストを`tests/`に作成
 3. MCPサーバーを活用して外部サービスと連携
@@ -200,6 +270,7 @@ mypy src/
 5. コードをフォーマット・リント
 
 ### MCPサーバーの活用
+
 ```python
 # GitHubから情報取得
 # mcp__github__get_issue でIssue情報を取得
@@ -212,6 +283,7 @@ mypy src/
 ```
 
 ### デバッグ
+
 ```python
 import pdb; pdb.set_trace()  # ブレークポイント
 ```
@@ -219,17 +291,20 @@ import pdb; pdb.set_trace()  # ブレークポイント
 ## トラブルシューティング
 
 ### MCPサーバー関連
+
 - MCPサーバーが動作しない場合は`npm install -g @modelcontextprotocol/server-*`を実行
 - APIキーが設定されているか`.env.mcp`を確認
 - Claudeアプリケーションを再起動
 
 ### Python環境
+
 - 仮想環境が有効でない場合は`source venv/bin/activate`を実行
 - パッケージが見つからない場合は`pip install -r requirements.txt`を再実行
 
 ## Smitheryの使い方
 
 ### MCPサーバーの管理
+
 ```bash
 # Smitheryを使って新しいMCPサーバーをインストール
 "Smitheryで obsidian MCPサーバーをインストールして"
@@ -242,6 +317,7 @@ import pdb; pdb.set_trace()  # ブレークポイント
 ```
 
 ### 開発ツール
+
 ```bash
 # MCPサーバーの開発
 "Smitheryで開発サーバーを起動（ホットリロード付き）"
@@ -252,18 +328,21 @@ import pdb; pdb.set_trace()  # ブレークポイント
 ## Serenaの詳細な使い方
 
 ### プロジェクトのアクティベート
+
 ```bash
 # 特定のプロジェクトをアクティベート
 # "Serenaで /path/to/project をアクティベート"
 ```
 
 ### LSP機能の活用
+
 - **定義にジャンプ**: 関数やクラスの定義元を探す
 - **参照検索**: 特定の関数が使われている場所をすべて探す
 - **シンボル検索**: プロジェクト全体からシンボルを検索
 - **エラー診断**: コードのエラーをリアルタイムで検出
 
 ### Serena vs filesystem
+
 - Serena使用時はfilesystemサーバーを無効にすることを推奨
 - Serenaはより高度なコード理解と操作が可能
 - シンプルなファイル読み書きのみの場合はfilesystemでも十分
@@ -286,27 +365,36 @@ import pdb; pdb.set_trace()  # ブレークポイント
    - 認証情報をハードコードしない
 
 ## リソース
+
 - [MCP Documentation](https://modelcontextprotocol.io/)
 - [Claude Code Documentation](https://docs.anthropic.com/claude-code)
 - [GitHub MCP Server](https://github.com/modelcontextprotocol/servers)
 
-## 開発コマンド（Makefile使用推奨）
+## 開発コマンド（最適化版）
 
 ```bash
-# コードフォーマット（Ruff/Black互換）
-make format  # または ruff format src tests
+# コードフォーマット（Ruff統一）
+ruff format src tests
 
-# リント（Ruff推奨）
-make lint    # または ruff check src tests
+# リント（Ruff統一）
+ruff check src tests --fix
 
 # 型チェック
-make type    # または mypy src
+mypy src
 
 # テスト実行（カバレッジ）
-make coverage  # または pytest tests --cov=src
+pytest tests --cov=src
 
 # すべてのチェック
-make pre-commit
+pre-commit run --all-files
+
+# Ollama統合
+./scripts/setup-ollama.sh  # セットアップ
+python src/ollama_integration.py  # テスト実行
+
+# ドキュメント生成
+mkdocs serve  # ローカルプレビュー
+mkdocs build  # ビルド
 ```
 
 ## 依存関係の更新（uv推奨）
@@ -331,4 +419,39 @@ OPENAI_API_KEY=your_openai_key  # または ANTHROPIC_API_KEY
 # 動作確認
 python test_github_mcp.py
 python src/github_mcp_integration.py
+```
+
+## Docker トラブルシューティング ✅ 解決済み
+
+### 問題: Failed to reopen folder in container
+
+**原因**: 依存関係の競合（httpxバージョン、Ollamaパッケージ）
+
+**解決策**:
+
+1. Ollamaパッケージを`optional-dependencies`に移動
+2. `requirements.txt` - 本番用（Ollama無し）
+3. `requirements-dev.txt` - 開発用（Ollama含む）
+4. httpxを0.27.0に統一
+
+### Docker使用状況
+
+```bash
+# イメージ確認
+docker images | grep claude-code-mcp
+# claude-code-mcp   latest    2a4e584ffcfb   238MB ✅
+
+# コンテナ動作確認
+docker run --rm claude-code-mcp:latest python --version
+# Python 3.11.13 ✅
+
+# 完全なクリーンビルド
+docker build --no-cache -t claude-code-mcp:latest .
+```
+
+### VS Code/Cursor Dev Container
+
+```json
+// .devcontainer/devcontainer.json設定済み
+// "Reopen in Container"で自動的にDocker環境で開発可能
 ```

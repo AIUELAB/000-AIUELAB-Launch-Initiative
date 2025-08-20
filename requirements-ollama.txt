@@ -1,0 +1,8 @@
+# Optional local LLM support (Python 3.11.x recommended)
+ollama==0.1.7
+langchain-ollama==0.1.0
+llama-index-llms-ollama==0.1.0
+
+# Usage:
+#   python3.11 -m venv venv && source venv/bin/activate
+#   pip install -r requirements-ollama.txt

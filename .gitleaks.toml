@@ -1,0 +1,106 @@
+# Gitleaks Configuration
+# Reference: https://github.com/gitleaks/gitleaks
+
+title = "Gitleaks config for Claude Code Template"
+
+[extend]
+# useDefault will extend the base configuration with the default gitleaks config
+useDefault = true
+
+# Redact secrets in the output
+[redact]
+description = "Redact secrets from output"
+
+# Additional custom rules
+[[rules]]
+id = "mcp-api-key"
+description = "MCP API Key"
+regex = '''(?i)(mcp|claude)[_\-]?(api)?[_\-]?key['"]?\s*[:=]\s*['"]?[a-zA-Z0-9\-_]{20,}'''
+tags = ["key", "MCP", "API"]
+
+[[rules]]
+id = "openai-api-key"
+description = "OpenAI API Key"
+regex = '''sk-[a-zA-Z0-9]{48}'''
+tags = ["key", "OpenAI"]
+
+[[rules]]
+id = "anthropic-api-key"
+description = "Anthropic API Key"
+regex = '''sk-ant-[a-zA-Z0-9]{93}'''
+tags = ["key", "Anthropic"]
+
+[[rules]]
+id = "github-pat"
+description = "GitHub Personal Access Token"
+regex = '''ghp_[a-zA-Z0-9]{36}'''
+tags = ["key", "GitHub"]
+
+[[rules]]
+id = "github-oauth"
+description = "GitHub OAuth Token"
+regex = '''gho_[a-zA-Z0-9]{36}'''
+tags = ["key", "GitHub", "OAuth"]
+
+[[rules]]
+id = "brave-api-key"
+description = "Brave Search API Key"
+regex = '''BSK[a-zA-Z0-9]{32}'''
+tags = ["key", "Brave"]
+
+[[rules]]
+id = "firecrawl-api-key"
+description = "Firecrawl API Key"
+regex = '''fc-[a-zA-Z0-9]{40}'''
+tags = ["key", "Firecrawl"]
+
+[[rules]]
+id = "smithery-api-key"
+description = "Smithery API Key"
+regex = '''smithery[_\-]?key['"]?\s*[:=]\s*['"]?[a-zA-Z0-9\-_]{20,}'''
+tags = ["key", "Smithery"]
+
+# Allowlist for paths and patterns to ignore
+[allowlist]
+description = "Global allowlist (merged)"
+paths = [
+    '''.env.example''',
+    '''.env.mcp.example''',
+    '''requirements*.txt''',
+    '''poetry.lock''',
+    '''Pipfile.lock''',
+    '''package-lock.json''',
+    '''yarn.lock''',
+    '''pnpm-lock.yaml''',
+    '''test/fixtures''',
+    '''tests/fixtures''',
+    '''test''',
+    '''tests''',
+    # file patterns are regex
+    '''^.*_test\.py$''',
+    '''^test_.*\.py$''',
+    '''vendor''',
+    '''node_modules''',
+    '''venv''',
+    '''.venv''',
+    '''__pycache__''',
+    '''.git''',
+    '''README.md''',
+    '''docs''',
+    '''*.md''',
+]
+regexes = [
+    '''(test|dummy|fake|example|sample)[_\-]?(api)?[_\-]?key''',
+    '''xxx+''',
+    '''your[_\-]?key[_\-]?here''',
+    '''<your[_\-]?api[_\-]?key>''',
+    '''\$\{\{.*\}\}''',
+    '''\$\{.*\}''',
+]
+commits = [
+    # Add specific commit SHAs to ignore here if needed
+]
+
+# Stop at specific commit
+[git]
+# fetchDepth = 100  # Limit history depth for faster scans

@@ -140,6 +140,7 @@ cython_debug/
 # IDEs
 .idea/
 .vscode/
+.devcontainer/
 *.swp
 *.swo
 *~
@@ -154,6 +155,8 @@ temp/
 tmp/
 cache/
 uploads/
+bin/*.tar.gz
+pyproject.toml.backup
 
 # Secrets and API Keys
 secrets/
@@ -195,3 +198,6 @@ Desktop.ini
 # Linux
 .directory
 .Trash-*
+
+# n8n local data
+.n8n/

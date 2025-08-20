@@ -25,6 +25,7 @@ bash scripts/setup-playwright-mcp.sh
 ```
 
 このスクリプトは以下を実行します：
+
 - Node.jsとnpmの確認
 - Playwright MCPサーバーのインストール
 - Playwrightブラウザ（Chromium、Firefox、WebKit）のインストール
@@ -50,6 +51,7 @@ bash scripts/setup-playwright-mcp.sh
 #### VS Code / Cursor
 
 設定から MCP → 新しいMCPサーバーを追加：
+
 - 名前: `playwright`
 - コマンド: `npx @playwright/mcp@latest`
 
@@ -159,6 +161,7 @@ claude mcp add playwright npx @playwright/mcp@latest
 ## 📋 利用可能なツール
 
 ### コア自動化ツール
+
 - `browser_navigate` - URLへ移動
 - `browser_snapshot` - ページ構造を取得（アクセシビリティツリー）
 - `browser_click` - 要素をクリック
@@ -171,24 +174,29 @@ claude mcp add playwright npx @playwright/mcp@latest
 - `browser_wait_for` - 待機
 
 ### ナビゲーション
+
 - `browser_navigate_back` - 前のページへ
 - `browser_navigate_forward` - 次のページへ
 
 ### スクリーンショット & 記録
+
 - `browser_take_screenshot` - スクリーンショット取得
 - `browser_pdf_save` - PDF保存（要 --caps=pdf）
 
 ### タブ管理
+
 - `browser_tab_list` - タブ一覧
 - `browser_tab_new` - 新規タブ
 - `browser_tab_select` - タブ選択
 - `browser_tab_close` - タブを閉じる
 
 ### デバッグ
+
 - `browser_network_requests` - ネットワークリクエスト一覧
 - `browser_console_messages` - コンソールメッセージ取得
 
 ### その他
+
 - `browser_handle_dialog` - ダイアログ処理
 - `browser_file_upload` - ファイルアップロード
 - `browser_resize` - ウィンドウサイズ変更
@@ -205,6 +213,7 @@ python src/playwright_mcp_examples.py
 ```
 
 このサンプルコードには以下の例が含まれています：
+
 - 基本的なナビゲーション
 - フォーム操作
 - Webスクレイピング
@@ -254,6 +263,6 @@ npm install -g @playwright/mcp@latest
 4. **ネットワーク監視**: `browser_network_requests`でAPIコールを追跡
 5. **マルチタブの活用**: 複数のページを並行して操作する際は`browser_tab_*`ツールを使用
 
-## 🎉 さあ、始めましょう！
+## 🎉 さあ、始めましょう
 
 Playwright MCPサーバーを使って、Webの自動化とテストを始めましょう。質問や問題がある場合は、GitHubのIssueを作成してください。
