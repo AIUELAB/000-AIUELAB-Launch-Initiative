@@ -1,9 +1,12 @@
-import { LocalStorage } from "@raycast/api";
+import { LocalStorage, getPreferenceValues } from "@raycast/api";
 
 export type Preferences = {
   baseUrl?: string;
   timeoutSec?: string;
   defaultUseTestUrl?: boolean;
+  remotePresetsUrl?: string;
+  apiKey?: string;
+  apiKeyHeaderName?: string;
 };
 
 export type HistoryItem = {
@@ -25,13 +28,21 @@ export function normalizeUrl(input: string, baseUrl: string, useTest: boolean): 
   return `${base}${suffix}${path}`;
 }
 
+export function withApiKeyHeaders(raw?: Record<string, string>): Record<string, string> | undefined {
+  const prefs = getPreferenceValues<Preferences>();
+  const apiKey = prefs.apiKey?.trim();
+  if (!apiKey) return raw;
+  const headerName = (prefs.apiKeyHeaderName || "X-API-Key").trim();
+  return { ...(raw || {}), [headerName]: apiKey };
+}
+
 export async function postJson(url: string, body: string | undefined, headers: Record<string, string> | undefined, timeoutMs: number): Promise<Response> {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const res = await fetch(url, {
       method: "POST",
-      headers,
+      headers: withApiKeyHeaders(headers),
       body: body || undefined,
       signal: controller.signal,
     });
