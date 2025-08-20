@@ -27,7 +27,7 @@ T = TypeVar("T")
 class ErrorRecovery:
     """エラーリカバリークラス"""
 
-    def __init__(self, max_retries: int = 3, retry_delay: int = 1):
+    def __init__(self, max_retries: int = 3, retry_delay: int = 1) -> None:
         """
         エラーリカバリーの初期化
 
@@ -41,7 +41,7 @@ class ErrorRecovery:
         self.error_log_file.parent.mkdir(exist_ok=True)
         self.session_manager = get_session_manager()
 
-    def log_error(self, error: Exception, context: str = ""):
+    def log_error(self, error: Exception, context: str = "") -> None:
         """
         エラーをログに記録
 
@@ -73,7 +73,7 @@ class ErrorRecovery:
 
         logger.error(f"[{context}] {error_info['error_type']}: {error_info['error_message']}")
 
-    def display_error(self, error: Exception, context: str = "", show_traceback: bool = False):
+    def display_error(self, error: Exception, context: str = "", show_traceback: bool = False) -> None:
         """
         エラーを見やすく表示
 
