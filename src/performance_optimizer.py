@@ -21,7 +21,6 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
 from pathlib import Path
-import pickle
 import aiofiles
 import aiohttp
 from loguru import logger
@@ -118,7 +117,7 @@ class PersistentCache:
     def _get_cache_file(self, key: str) -> Path:
         """Get cache file path for key"""
         hash_key = hashlib.sha256(key.encode()).hexdigest()
-        return self.cache_dir / f"{hash_key}.pkl"
+        return self.cache_dir / f"{hash_key}.json"
     
     async def get(self, key: str) -> Optional[Any]:
         """Get value from persistent cache"""
@@ -137,9 +136,9 @@ class PersistentCache:
                 return None
             
             try:
-                async with aiofiles.open(cache_file, 'rb') as f:
+                async with aiofiles.open(cache_file, 'r') as f:
                     content = await f.read()
-                    return pickle.loads(content)
+                    return json.loads(content)
             except Exception as e:
                 logger.warning(f"Failed to load cache entry: {e}")
                 return None
@@ -150,9 +149,9 @@ class PersistentCache:
             cache_file = self._get_cache_file(key)
             
             try:
-                # Write data
-                async with aiofiles.open(cache_file, 'wb') as f:
-                    await f.write(pickle.dumps(value))
+                # Write data (JSON)
+                async with aiofiles.open(cache_file, 'w') as f:
+                    await f.write(json.dumps(value))
                 
                 # Update index
                 self.index[key] = {

@@ -22,7 +22,6 @@ from typing import Any, Dict, List, Optional, Union
 from pathlib import Path
 import subprocess
 import hashlib
-import pickle
 import yaml
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
@@ -114,20 +113,33 @@ class TaskCache:
     def get(self, task_type: str, params: Dict) -> Optional[TaskResult]:
         """Get cached result if available and not expired"""
         key = self._get_cache_key(task_type, params)
-        cache_file = self.cache_dir / f"{key}.pkl"
+        cache_file = self.cache_dir / f"{key}.json"
         
         if not cache_file.exists():
             return None
         
         try:
-            with open(cache_file, 'rb') as f:
-                result, timestamp = pickle.load(f)
-            
-            # Check if cache is expired
+            with open(cache_file, 'r', encoding='utf-8') as f:
+                payload = json.load(f)
+            # Parse timestamp and check expiry
+            timestamp = datetime.fromisoformat(payload.get("timestamp"))
             if datetime.now() - timestamp > self.ttl:
                 cache_file.unlink()
                 return None
-                
+
+            data = payload.get("result", {})
+            # Reconstruct TaskResult
+            result = TaskResult(
+                task_id=data.get("task_id", "unknown"),
+                task_type=TaskType(data.get("task_type", TaskType.TEST.value)),
+                status=data.get("status", "success"),
+                start_time=datetime.fromisoformat(data.get("start_time")),
+                end_time=datetime.fromisoformat(data.get("end_time")),
+                output=data.get("output"),
+                errors=list(data.get("errors", [])),
+                warnings=list(data.get("warnings", [])),
+                metrics=dict(data.get("metrics", {})),
+            )
             return result
         except Exception as e:
             logger.warning(f"Failed to load cache: {e}")
@@ -136,17 +148,21 @@ class TaskCache:
     def set(self, task_type: str, params: Dict, result: TaskResult):
         """Cache task result"""
         key = self._get_cache_key(task_type, params)
-        cache_file = self.cache_dir / f"{key}.pkl"
+        cache_file = self.cache_dir / f"{key}.json"
         
         try:
-            with open(cache_file, 'wb') as f:
-                pickle.dump((result, datetime.now()), f)
+            payload = {
+                "result": result.to_dict(),
+                "timestamp": datetime.now().isoformat(),
+            }
+            with open(cache_file, 'w', encoding='utf-8') as f:
+                json.dump(payload, f, ensure_ascii=False)
         except Exception as e:
             logger.warning(f"Failed to save cache: {e}")
     
     def clear(self):
         """Clear all cache"""
-        for cache_file in self.cache_dir.glob("*.pkl"):
+        for cache_file in self.cache_dir.glob("*.json"):
             cache_file.unlink()
 
 
