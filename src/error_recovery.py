@@ -327,7 +327,7 @@ if __name__ == "__main__":
     setup_global_exception_handler()
 
     # リトライデコレーターのテスト
-    @with_retry(max_retries=2, delay=0.5)
+    @with_retry(max_retries=2, delay=1)
     def flaky_function():
         import random
 

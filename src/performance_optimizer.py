@@ -17,7 +17,7 @@ import hashlib
 import json
 import time
 from collections import OrderedDict
-from collections.abc import Callable, Coroutine, AsyncIterator
+from collections.abc import AsyncIterator, Callable, Coroutine
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, TypeVar
@@ -408,7 +408,10 @@ class OptimizedMCPClient:
         session = await self.pool.get_session(self.config["name"], self.config["url"])
 
         async with session.post("/tools/list") as response:
-            return await response.json()
+            data: Any = await response.json()
+            if isinstance(data, list):
+                return data
+            return [data]
 
     async def batch_execute(self, requests: list[dict]) -> list[Any]:
         """Execute multiple requests in parallel"""
