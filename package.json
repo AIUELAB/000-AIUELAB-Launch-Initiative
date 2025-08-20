@@ -15,7 +15,8 @@
         "n8n:start:ready": "npm run n8n:setup && npm run n8n:start",
         "n8n:stop": "docker compose -f docker-compose.n8n.yml --env-file .env.n8n down",
         "n8n:logs": "docker compose -f docker-compose.n8n.yml --env-file .env.n8n logs -f n8n",
-        "n8n:reset": "docker compose -f docker-compose.n8n.yml --env-file .env.n8n down -v && docker compose -f docker-compose.n8n.yml --env-file .env.n8n up -d"
+        "n8n:reset": "docker compose -f docker-compose.n8n.yml --env-file .env.n8n down -v && docker compose -f docker-compose.n8n.yml --env-file .env.n8n up -d",
+        "n8n:status": "docker compose -f docker-compose.n8n.yml --env-file .env.n8n ps && docker compose -f docker-compose.n8n.yml --env-file .env.n8n logs --tail=50 n8n | tail -n 50"
     },
     "dependencies": {
         "@modelcontextprotocol/sdk": "^0.9.0"
