@@ -1,19 +1,40 @@
-import { Action, ActionPanel, Detail, Form, List, Toast, getPreferenceValues, showHUD, showToast, useNavigation } from "@raycast/api";
-import { useMemo, useState } from "react";
-import { Preferences, normalizeUrl, postJson, saveHistoryItem } from "./lib";
-import { PRESETS, Preset } from "./presets";
+import { Action, ActionPanel, Detail, List, Toast, getPreferenceValues, showHUD, showToast, useNavigation } from "@raycast/api";
+import { useEffect, useMemo, useState } from "react";
+import { Preferences, postJson, saveHistoryItem } from "./lib";
+import { PRESETS, Preset, RemotePresets, mergeRemotePresets } from "./presets";
 
 export default function Command() {
-  const prefs = getPreferenceValues<Preferences>();
+  const prefs = getPreferenceValues<Preferences & { remotePresetsUrl?: string }>();
   const [query, setQuery] = useState("");
   const [useTest, setUseTest] = useState<boolean>(false); // 既定は /webhook
-  const list = useMemo(() => PRESETS.filter(p => p.title.toLowerCase().includes(query.toLowerCase()) || p.path.includes(query)), [query]);
+  const [data, setData] = useState<Preset[]>(PRESETS);
   const { push } = useNavigation();
 
+  useEffect(() => {
+    (async () => {
+      const url = prefs.remotePresetsUrl?.trim();
+      if (!url) {
+        setData(PRESETS);
+        return;
+      }
+      try {
+        const res = await fetch(url, { method: "GET" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = (await res.json()) as RemotePresets;
+        setData(mergeRemotePresets(PRESETS, json));
+      } catch (e: any) {
+        await showToast({ style: Toast.Style.Failure, title: "Failed to fetch presets", message: String(e?.message || e) });
+        setData(PRESETS);
+      }
+    })();
+  }, []);
+
+  const list = useMemo(() => data.filter(p => (p.title?.toLowerCase().includes(query.toLowerCase()) || p.path.includes(query))), [data, query]);
+
   async function run(preset: Preset) {
-    const baseUrl = prefs.baseUrl || "http://localhost:5678";
-    const url = normalizeUrl(preset.path, baseUrl, useTest);
-    const timeoutSec = Number(prefs.timeoutSec || "10");
+    const baseUrl = (getPreferenceValues<{ baseUrl?: string }>().baseUrl || "http://localhost:5678").replace(/\/$/, "");
+    const timeoutSec = Number((getPreferenceValues<{ timeoutSec?: string }>().timeoutSec || "10"));
+    const url = `${baseUrl}${useTest ? "/webhook-test/" : "/webhook/"}${preset.path}`;
     const payload = preset.defaultPayload || "";
     const headers = preset.headers ? JSON.parse(preset.headers) : undefined;
 
@@ -53,9 +74,9 @@ export default function Command() {
       {list.map((p) => (
         <List.Item
           key={p.id}
-          title={p.title}
+          title={`${p.icon ? p.icon + " " : ""}${p.title}`}
           subtitle={p.path}
-          accessories={[{ tag: useTest ? "test" : "prod" }]}
+          accessories={[{ tag: useTest ? "test" : "prod" }, ...(p.category ? [{ tag: p.category }] : [])]}
           keywords={[p.path]}
           actions={
             <ActionPanel>

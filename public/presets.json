@@ -1,0 +1,17 @@
+{
+  "version": "1.0.0",
+  "updated": "",
+  "presets": [
+    {
+      "id": "raycast-cli",
+      "title": "Raycast CLI Trigger",
+      "path": "raycast-cli",
+      "description": "Run workflow for Raycast demo",
+      "category": "automation",
+      "icon": "⚡",
+      "defaultPayload": { "source": "raycast" },
+      "requiredFields": [],
+      "optionalFields": []
+    }
+  ]
+}

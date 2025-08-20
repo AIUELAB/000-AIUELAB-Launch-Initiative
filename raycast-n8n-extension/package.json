@@ -71,6 +71,13 @@
       "type": "checkbox",
       "required": false,
       "default": false
+    },
+    {
+      "name": "remotePresetsUrl",
+      "title": "Remote Presets URL (optional)",
+      "description": "URL to presets.json (e.g. https://your-n8n.example.com/presets.json or GitHub raw)",
+      "type": "textfield",
+      "required": false
     }
   ],
   "dependencies": {

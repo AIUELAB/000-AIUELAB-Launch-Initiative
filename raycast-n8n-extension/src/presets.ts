@@ -1,10 +1,25 @@
 export type Preset = {
   id: string;            // unique id
   title: string;         // display name
-  path: string;          // webhook path (without prefix)
+  path: string;          // webhook path (without prefix or with, both accepted)
   description?: string;  // optional description
+  category?: string;     // category (task/notification/automation)
+  icon?: string;         // optional icon
   defaultPayload?: string; // JSON string
   headers?: string;        // JSON string
+  requiredFields?: string[];
+  optionalFields?: string[];
+};
+
+export type RemotePresets = {
+  version?: string;
+  updated?: string;
+  presets: Array<
+    Omit<Preset, "defaultPayload" | "headers"> & {
+      defaultPayload?: Record<string, unknown> | string;
+      headers?: Record<string, string> | string;
+    }
+  >;
 };
 
 // プロジェクトごとに編集してください（例）
@@ -14,12 +29,44 @@ export const PRESETS: Preset[] = [
     title: "Raycast CLI Trigger",
     path: "raycast-cli",
     description: "Run workflow for Raycast demo",
-    defaultPayload: '{"source":"raycast","ts": "{{now}}"}'
+    defaultPayload: '{"source":"raycast","ts":"{{now}}"}'
   },
   {
     id: "daily-report",
     title: "Daily Report",
     path: "daily-report",
-    description: "Generate daily report",
+    description: "Generate daily report"
   }
 ];
+
+export function normalizePreset(p: Preset): Preset {
+  // 先頭スラッシュや /webhook[-test]/ を外してパス正規化（UI 側で prefix を付与）
+  const path = p.path.replace(/^https?:\/\/[^/]+\//, "").replace(/^\/?(webhook|webhook-test)\//, "").replace(/^\//, "");
+  return { ...p, path };
+}
+
+export function mergeRemotePresets(localPresets: Preset[], remote: RemotePresets | null): Preset[] {
+  if (!remote || !Array.isArray(remote.presets)) return localPresets.map(normalizePreset);
+  const normalizedRemote: Preset[] = remote.presets.map((r) => {
+    const defaultPayloadStr = typeof r.defaultPayload === "string" ? r.defaultPayload : (r.defaultPayload ? JSON.stringify(r.defaultPayload) : undefined);
+    const headersStr = typeof r.headers === "string" ? r.headers : (r.headers ? JSON.stringify(r.headers) : undefined);
+    return normalizePreset({
+      id: r.id || r.path,
+      title: r.title || r.path,
+      path: r.path,
+      description: r.description,
+      category: (r as any).category,
+      icon: (r as any).icon,
+      defaultPayload: defaultPayloadStr,
+      headers: headersStr,
+      requiredFields: (r as any).requiredFields,
+      optionalFields: (r as any).optionalFields,
+    });
+  });
+  // 重複は remote 優先で path/id で上書き
+  const byId = new Map<string, Preset>();
+  [...localPresets.map(normalizePreset), ...normalizedRemote].forEach((p) => {
+    byId.set(p.id || p.path, p);
+  });
+  return Array.from(byId.values());
+}
