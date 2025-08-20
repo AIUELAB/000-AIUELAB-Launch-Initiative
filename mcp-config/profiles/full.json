@@ -1,4 +1,4 @@
 {
-    "description": "Full MCP configuration with all available servers",
-    "inherits": "../claude_desktop_config.json"
+  "description": "Full MCP configuration with all available servers",
+  "inherits": "../claude_desktop_config.json"
 }

@@ -3,122 +3,122 @@
 
 # CI configuration for pre-commit.ci
 ci:
-    autofix_prs: true
-    autoupdate_schedule: weekly
-    autoupdate_commit_msg: "chore: pre-commit autoupdate"
-    skip: [mypy, pytest]
+  autofix_prs: true
+  autoupdate_schedule: weekly
+  autoupdate_commit_msg: "chore: pre-commit autoupdate"
+  skip: [mypy, pytest]
 
 # Default stages
 default_stages: [pre-commit]
 
 repos:
-    # Pre-commit meta hooks
-    - repo: meta
-      hooks:
-          - id: check-hooks-apply
+  # Pre-commit meta hooks
+  - repo: meta
+    hooks:
+      - id: check-hooks-apply
 
-    # General file checks
-    - repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: v4.5.0
-      hooks:
-          - id: trailing-whitespace
-            args: [--markdown-linebreak-ext=md]
-          - id: end-of-file-fixer
-          - id: check-yaml
-            args: [--unsafe]
-          - id: check-toml
-          - id: check-json
-          - id: check-added-large-files
-            args: ["--maxkb=1000"]
-          - id: check-case-conflict
-          - id: check-merge-conflict
-          - id: detect-private-key
-          - id: debug-statements
-          - id: check-ast
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: [--unsafe]
+      - id: check-toml
+      - id: check-json
+      - id: check-added-large-files
+        args: ["--maxkb=1000"]
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: debug-statements
+      - id: check-ast
 
-    # Ruff - 統一リンター/フォーマッター
-    - repo: https://github.com/astral-sh/ruff-pre-commit
-      rev: v0.3.4
-      hooks:
-          # Ruff linter
-          - id: ruff
-            args: [--fix, --exit-non-zero-on-fix]
-            files: ^(src/|raycast-n8n-extension/)
-          # Ruff formatter (Black互換)
-          - id: ruff-format
-            files: ^(src/|raycast-n8n-extension/)
+  # Ruff - 統一リンター/フォーマッター
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.3.4
+    hooks:
+      # Ruff linter
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+        files: ^(src/|raycast-n8n-extension/)
+      # Ruff formatter (Black互換)
+      - id: ruff-format
+        files: ^(src/|raycast-n8n-extension/)
 
-    # Type checking with mypy
-    - repo: https://github.com/pre-commit/mirrors-mypy
-      rev: v1.9.0
-      hooks:
-          - id: mypy
-            additional_dependencies:
-                [types-requests, types-pyyaml, types-aiofiles, pydantic]
-            args: [--ignore-missing-imports]
-            files: ^src/
+  # Type checking with mypy
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.9.0
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          [types-requests, types-pyyaml, types-aiofiles, pydantic]
+        args: [--ignore-missing-imports]
+        files: ^src/
 
-    # Security checks with bandit
-    - repo: https://github.com/PyCQA/bandit
-      rev: 1.7.8
-      hooks:
-          - id: bandit
-            args: ["-ll", "-r", "src/"]
-            exclude: tests/
+  # Security checks with bandit
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.8
+    hooks:
+      - id: bandit
+        args: ["-ll", "-r", "src/"]
+        exclude: tests/
 
-    # Secrets detection with Gitleaks
-    - repo: https://github.com/gitleaks/gitleaks
-      rev: v8.18.2
-      hooks:
-          - id: gitleaks
+  # Secrets detection with Gitleaks
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.2
+    hooks:
+      - id: gitleaks
 
-    # YAML formatting (必要最小限)
-    - repo: https://github.com/pre-commit/mirrors-prettier
-      rev: v4.0.0-alpha.8
-      hooks:
-          - id: prettier
-            types_or: [yaml, json]
-            exclude: '\.md$'
+  # YAML formatting (必要最小限)
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v4.0.0-alpha.8
+    hooks:
+      - id: prettier
+        types_or: [yaml, json]
+        exclude: '\.md$'
 
-    # Shell script checks
-    - repo: https://github.com/shellcheck-py/shellcheck-py
-      rev: v0.10.0.1
-      hooks:
-          - id: shellcheck
-            args: ["--severity=warning", "--shell=bash"]
-            exclude: "^tests/scripts/.*\\.zsh$|^tests/scripts/load-keys\\.zsh$|^tests/scripts/session-status\\.zsh$"
+  # Shell script checks
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+        args: ["--severity=warning", "--shell=bash"]
+        exclude: "^tests/scripts/.*\\.zsh$|^tests/scripts/load-keys\\.zsh$|^tests/scripts/session-status\\.zsh$"
 
-    # Validate GitHub Actions
-    - repo: https://github.com/python-jsonschema/check-jsonschema
-      rev: 0.28.1
-      hooks:
-          - id: check-github-actions
-          - id: check-github-workflows
+  # Validate GitHub Actions
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.28.1
+    hooks:
+      - id: check-github-actions
+      - id: check-github-workflows
 
-    # Markdown linting
-    - repo: https://github.com/igorshubovych/markdownlint-cli
-      rev: v0.39.0
-      hooks:
-          - id: markdownlint
-            args: ["--fix", "--disable", "MD013", "MD033"]
+  # Markdown linting
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.39.0
+    hooks:
+      - id: markdownlint
+        args: ["--fix", "--disable", "MD013", "MD033"]
 
 # Files to exclude globally
 exclude: |
-    (?x)^(
-      .*\.min\.(js|css)|
-      vendor/.*|
-      node_modules/.*|
-      \.venv/.*|
-      venv/.*|
-      __pycache__/.*|
-      \.pytest_cache/.*|
-      \.mypy_cache/.*|
-      \.ruff_cache/.*|
-      \.git/.*|
-      build/.*|
-      dist/.*|
-      .*\.egg-info/.*|
-      docs/_build/.*|
-      \.DS_Store|
-      Thumbs\.db
-    )$
+  (?x)^(
+    .*\.min\.(js|css)|
+    vendor/.*|
+    node_modules/.*|
+    \.venv/.*|
+    venv/.*|
+    __pycache__/.*|
+    \.pytest_cache/.*|
+    \.mypy_cache/.*|
+    \.ruff_cache/.*|
+    \.git/.*|
+    build/.*|
+    dist/.*|
+    .*\.egg-info/.*|
+    docs/_build/.*|
+    \.DS_Store|
+    Thumbs\.db
+  )$

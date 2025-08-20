@@ -11,169 +11,169 @@ edit_uri: edit/main/docs/
 
 # Theme configuration
 theme:
-    name: material
-    language: ja
-    features:
-        - navigation.instant
-        - navigation.tracking
-        - navigation.tabs
-        - navigation.tabs.sticky
-        - navigation.sections
-        - navigation.expand
-        - navigation.indexes
-        - navigation.top
-        - navigation.footer
-        - search.suggest
-        - search.highlight
-        - search.share
-        - content.code.copy
-        - content.code.annotate
-        - content.tabs.link
-        - toc.follow
-    palette:
-        # Light mode
-        - scheme: default
-          primary: indigo
-          accent: indigo
-          toggle:
-              icon: material/brightness-7
-              name: Switch to dark mode
-        # Dark mode
-        - scheme: slate
-          primary: indigo
-          accent: indigo
-          toggle:
-              icon: material/brightness-4
-              name: Switch to light mode
-    font:
-        text: Roboto
-        code: Roboto Mono
-    icon:
-        logo: material/robot
-        repo: fontawesome/brands/github
+  name: material
+  language: ja
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.indexes
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+    - toc.follow
+  palette:
+    # Light mode
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  font:
+    text: Roboto
+    code: Roboto Mono
+  icon:
+    logo: material/robot
+    repo: fontawesome/brands/github
 
 # Plugins
 plugins:
-    - search:
-          lang: ja
-    - mkdocstrings:
-          default_handler: python
-          handlers:
-              python:
-                  paths: [src]
-                  options:
-                      show_source: true
-                      show_root_heading: true
-                      show_root_toc_entry: true
-                      show_object_full_path: false
-                      show_category_heading: true
-                      show_if_no_docstring: false
-                      show_signature: true
-                      show_signature_annotations: true
-                      separate_signature: true
-                      line_length: 100
-                      merge_init_into_class: true
-                      docstring_style: google
-                      docstring_section_style: spacy
-                      filters: ["!^_"]
-    - autorefs
-    - gen-files:
-          scripts:
-              - docs/gen_ref_pages.py
-    - literate-nav:
-          nav_file: SUMMARY.md
-    - section-index
+  - search:
+      lang: ja
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths: [src]
+          options:
+            show_source: true
+            show_root_heading: true
+            show_root_toc_entry: true
+            show_object_full_path: false
+            show_category_heading: true
+            show_if_no_docstring: false
+            show_signature: true
+            show_signature_annotations: true
+            separate_signature: true
+            line_length: 100
+            merge_init_into_class: true
+            docstring_style: google
+            docstring_section_style: spacy
+            filters: ["!^_"]
+  - autorefs
+  - gen-files:
+      scripts:
+        - docs/gen_ref_pages.py
+  - literate-nav:
+      nav_file: SUMMARY.md
+  - section-index
 
 # Markdown extensions
 markdown_extensions:
-    - abbr
-    - admonition
-    - attr_list
-    - def_list
-    - footnotes
-    - md_in_html
-    - tables
-    - toc:
-          permalink: true
-          toc_depth: 3
-    - pymdownx.arithmatex:
-          generic: true
-    - pymdownx.betterem:
-          smart_enable: all
-    - pymdownx.caret
-    - pymdownx.critic
-    - pymdownx.details
-    - pymdownx.emoji:
-          emoji_index: !!python/name:material.extensions.emoji.twemoji
-          emoji_generator: !!python/name:material.extensions.emoji.to_svg
-    - pymdownx.highlight:
-          anchor_linenums: true
-          line_spans: __span
-          pygments_lang_class: true
-    - pymdownx.inlinehilite
-    - pymdownx.keys
-    - pymdownx.mark
-    - pymdownx.smartsymbols
-    - pymdownx.snippets
-    - pymdownx.superfences:
-          custom_fences:
-              - name: mermaid
-                class: mermaid
-                format: !!python/name:pymdownx.superfences.fence_code_format
-    - pymdownx.tabbed:
-          alternate_style: true
-    - pymdownx.tasklist:
-          custom_checkbox: true
-    - pymdownx.tilde
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.critic
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
 
 # Navigation
 nav:
-    - ホーム: index.md
-    - クイックスタート:
-          - インストール: quickstart/installation.md
-          - 設定: quickstart/configuration.md
-          - 最初のプロジェクト: quickstart/first-project.md
-    - 機能:
-          - MCPサーバー: features/mcp-servers.md
-          - Ollama統合: features/ollama.md
-          - セキュリティ: features/security.md
-          - CI/CD: features/cicd.md
-    - APIリファレンス:
-          - 概要: api/overview.md
-          - モジュール: api/modules.md
-    - 開発ガイド:
-          - コーディング規約: development/coding-standards.md
-          - テスト: development/testing.md
-          - コントリビューション: development/contributing.md
-    - 例:
-          - 基本的な使用例: examples/basic.md
-          - 高度な使用例: examples/advanced.md
-    - リリースノート: changelog.md
+  - ホーム: index.md
+  - クイックスタート:
+      - インストール: quickstart/installation.md
+      - 設定: quickstart/configuration.md
+      - 最初のプロジェクト: quickstart/first-project.md
+  - 機能:
+      - MCPサーバー: features/mcp-servers.md
+      - Ollama統合: features/ollama.md
+      - セキュリティ: features/security.md
+      - CI/CD: features/cicd.md
+  - APIリファレンス:
+      - 概要: api/overview.md
+      - モジュール: api/modules.md
+  - 開発ガイド:
+      - コーディング規約: development/coding-standards.md
+      - テスト: development/testing.md
+      - コントリビューション: development/contributing.md
+  - 例:
+      - 基本的な使用例: examples/basic.md
+      - 高度な使用例: examples/advanced.md
+  - リリースノート: changelog.md
 
 # Extra configuration
 extra:
-    social:
-        - icon: fontawesome/brands/github
-          link: https://github.com/your-username
-        - icon: fontawesome/brands/twitter
-          link: https://twitter.com/your-username
-    analytics:
-        provider: google
-        property: G-XXXXXXXXXX
-    consent:
-        title: Cookie consent
-        description: >-
-            We use cookies to recognize your repeated visits and preferences, as well
-            as to measure the effectiveness of our documentation and whether users
-            find what they're searching for. With your consent, you're helping us to
-            make our documentation better.
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/your-username
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/your-username
+  analytics:
+    provider: google
+    property: G-XXXXXXXXXX
+  consent:
+    title: Cookie consent
+    description: >-
+      We use cookies to recognize your repeated visits and preferences, as well
+      as to measure the effectiveness of our documentation and whether users
+      find what they're searching for. With your consent, you're helping us to
+      make our documentation better.
 
 # Extra CSS and JavaScript
 extra_css:
-    - stylesheets/extra.css
+  - stylesheets/extra.css
 
 extra_javascript:
-    - javascripts/extra.js
+  - javascripts/extra.js
 
 # Copyright
 copyright: Copyright &copy; 2025 Claude Code Team

@@ -1,66 +1,66 @@
 {
-    "name": "raycast-n8n-runner",
-    "title": "n8n Runner",
-    "description": "Run n8n workflows via Webhook from Raycast with JSON payload and timeout handling.",
-    "version": "1.0.0",
-    "author": "Admin",
-    "schemaVersion": 1,
-    "categories": [
-        "Developer Tools"
-    ],
-    "license": "MIT",
-    "commands": [
-        {
-            "name": "run-webhook",
-            "title": "Run n8n Webhook",
-            "description": "Execute n8n workflow via webhook",
-            "mode": "view",
-            "keywords": [
-                "n8n",
-                "webhook",
-                "workflow",
-                "automation"
-            ],
-            "path": "src/run-webhook.tsx"
-        },
-        {
-            "name": "history",
-            "title": "n8n Run History",
-            "description": "View and re-run previous webhook executions",
-            "mode": "view",
-            "keywords": [
-                "n8n",
-                "history",
-                "rerun"
-            ],
-            "path": "src/history.tsx"
-        }
-    ],
-    "preferences": [
-        {
-            "name": "baseUrl",
-            "title": "n8n Base URL",
-            "description": "Default base URL for n8n (used when you provide a path instead of a full URL)",
-            "type": "textfield",
-            "required": false,
-            "default": "http://localhost:5678"
-        },
-        {
-            "name": "timeoutSec",
-            "title": "Request Timeout (sec)",
-            "type": "textfield",
-            "required": false,
-            "default": "10"
-        },
-        {
-            "name": "defaultUseTestUrl",
-            "title": "Use /webhook-test by default",
-            "type": "checkbox",
-            "required": false,
-            "default": false
-        }
-    ],
-    "dependencies": {
-        "@raycast/api": "^1.74.0"
+  "name": "raycast-n8n-runner",
+  "title": "n8n Runner",
+  "description": "Run n8n workflows via Webhook from Raycast with JSON payload and timeout handling.",
+  "version": "1.0.0",
+  "author": "Admin",
+  "schemaVersion": 1,
+  "categories": [
+    "Developer Tools"
+  ],
+  "license": "MIT",
+  "commands": [
+    {
+      "name": "run-webhook",
+      "title": "Run n8n Webhook",
+      "description": "Execute n8n workflow via webhook",
+      "mode": "view",
+      "keywords": [
+        "n8n",
+        "webhook",
+        "workflow",
+        "automation"
+      ],
+      "path": "src/run-webhook.tsx"
+    },
+    {
+      "name": "history",
+      "title": "n8n Run History",
+      "description": "View and re-run previous webhook executions",
+      "mode": "view",
+      "keywords": [
+        "n8n",
+        "history",
+        "rerun"
+      ],
+      "path": "src/history.tsx"
     }
+  ],
+  "preferences": [
+    {
+      "name": "baseUrl",
+      "title": "n8n Base URL",
+      "description": "Default base URL for n8n (used when you provide a path instead of a full URL)",
+      "type": "textfield",
+      "required": false,
+      "default": "http://localhost:5678"
+    },
+    {
+      "name": "timeoutSec",
+      "title": "Request Timeout (sec)",
+      "type": "textfield",
+      "required": false,
+      "default": "10"
+    },
+    {
+      "name": "defaultUseTestUrl",
+      "title": "Use /webhook-test by default",
+      "type": "checkbox",
+      "required": false,
+      "default": false
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^1.74.0"
+  }
 }
