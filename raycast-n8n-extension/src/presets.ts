@@ -43,8 +43,20 @@ export function normalizePreset(p: Preset): Preset {
 export function mergeRemotePresets(localPresets: Preset[], remote: RemotePresets | null): Preset[] {
   if (!remote || !Array.isArray(remote.presets)) return localPresets.map(normalizePreset);
   const normalizedRemote: Preset[] = remote.presets.map((r) => {
-    const defaultPayloadStr = typeof r.defaultPayload === "string" ? r.defaultPayload : (r.defaultPayload ? JSON.stringify(r.defaultPayload) : undefined);
-    const headersStr = typeof r.headers === "string" ? r.headers : (r.headers ? JSON.stringify(r.headers) : undefined);
+    let defaultPayloadStr: string | undefined;
+    if (typeof r.defaultPayload === "string") {
+      defaultPayloadStr = r.defaultPayload;
+    } else if (r.defaultPayload) {
+      defaultPayloadStr = JSON.stringify(r.defaultPayload);
+    }
+
+    let headersStr: string | undefined;
+    if (typeof r.headers === "string") {
+      headersStr = r.headers;
+    } else if (r.headers) {
+      headersStr = JSON.stringify(r.headers);
+    }
+
     return normalizePreset({
       id: r.id || r.path,
       title: r.title || r.path,
