@@ -15,6 +15,9 @@ if [ -z "${NEW_BASE_URL}" ]; then
   exit 1
 fi
 
+# shellcheck disable=SC2034
+: "${EXTENSION_NAME}" # keep variable referenced for shellcheck
+
 API_KEY=""
 if [ -f "$KEY_FILE" ]; then
   API_KEY="$(cat "$KEY_FILE" | tr -d '\r\n')"
