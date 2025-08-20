@@ -113,55 +113,53 @@ def check_file_for_secrets(file_path: Path) -> list[tuple[int, str, str]]:
     return findings
 
 
+def _iter_files(base_dir: Path, patterns: list[str]) -> list[Path]:
+    """Return files under base_dir matching any of the glob patterns, excluding skip list.
+
+    This helper centralizes the traversal to keep the control flow in main() simple.
+    """
+    files: list[Path] = []
+    for pattern in patterns:
+        for file_path in base_dir.rglob(pattern):
+            if should_skip(file_path):
+                continue
+            files.append(file_path)
+    return files
+
+
+def _scan_group(base_dir: Path, patterns: list[str]) -> tuple[list[tuple[Path, list[tuple[int, str, str]]]], int]:
+    """Scan a group of patterns and return (findings, files_checked)."""
+    findings_list: list[tuple[Path, list[tuple[int, str, str]]]] = []
+    files_checked = 0
+
+    for file_path in _iter_files(base_dir, patterns):
+        files_checked += 1
+        findings = check_file_for_secrets(file_path)
+        if findings:
+            findings_list.append((file_path, findings))
+
+    return findings_list, files_checked
+
+
 def main():
     """Main function to check for secrets."""
     print("🔍 Checking for secrets and sensitive information...")
 
     base_dir = Path(__file__).parent.parent
-    all_findings = []
+    all_findings: list[tuple[Path, list[tuple[int, str, str]]]] = []
     files_checked = 0
 
-    # Check Python files
-    for file_path in base_dir.rglob("*.py"):
-        if should_skip(file_path):
-            continue
+    scan_groups: list[list[str]] = [
+        ["*.py"],
+        ["*.js", "*.ts", "*.jsx", "*.tsx"],
+        ["*.json", "*.yml", "*.yaml", "*.toml", "*.ini"],
+        ["*.sh"],
+    ]
 
-        files_checked += 1
-        findings = check_file_for_secrets(file_path)
-        if findings:
-            all_findings.append((file_path, findings))
-
-    # Check JavaScript/TypeScript files
-    for pattern in ["*.js", "*.ts", "*.jsx", "*.tsx"]:
-        for file_path in base_dir.rglob(pattern):
-            if should_skip(file_path):
-                continue
-
-            files_checked += 1
-            findings = check_file_for_secrets(file_path)
-            if findings:
-                all_findings.append((file_path, findings))
-
-    # Check configuration files
-    for pattern in ["*.json", "*.yml", "*.yaml", "*.toml", "*.ini"]:
-        for file_path in base_dir.rglob(pattern):
-            if should_skip(file_path):
-                continue
-
-            files_checked += 1
-            findings = check_file_for_secrets(file_path)
-            if findings:
-                all_findings.append((file_path, findings))
-
-    # Check shell scripts
-    for file_path in base_dir.rglob("*.sh"):
-        if should_skip(file_path):
-            continue
-
-        files_checked += 1
-        findings = check_file_for_secrets(file_path)
-        if findings:
-            all_findings.append((file_path, findings))
+    for patterns in scan_groups:
+        group_findings, count = _scan_group(base_dir, patterns)
+        all_findings.extend(group_findings)
+        files_checked += count
 
     # Report findings
     print(f"✅ Checked {files_checked} files")
