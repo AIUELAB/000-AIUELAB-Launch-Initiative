@@ -110,7 +110,7 @@ class SessionManager:
                 with backup_file.open("w", encoding="utf-8") as f:
                     json.dump(self.session_data, f, indent=2, ensure_ascii=False)
 
-                # 古いバックアップを削除（最新10個を保持）
+                # 古いバックアップを削除(最新10個を保持)
                 self._cleanup_old_backups()
 
             if not is_auto_save:

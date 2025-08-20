@@ -200,6 +200,7 @@ ignore = ["E501", "PLR0913", "ANN101", "ANN102"]  # line length, too many argume
 "src/remote_mcp_integration.py" = ["ANN", "PLR2004", "PTH110", "PTH123", "PLW2901"]
 "src/playwright_mcp_examples.py" = ["ANN", "RUF001"]
 "src/beartype_integration.py" = ["ANN", "E402", "UP007", "PLR2004", "ARG001", "RUF003"]
+"src/ollama_integration.py" = ["ANN"]
 
 [tool.ruff.format]
 quote-style = "double"
