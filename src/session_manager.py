@@ -6,7 +6,7 @@
 
 import json
 import os
-import pickle
+from base64 import b64encode, b64decode
 import signal
 import sys
 import threading
@@ -230,11 +230,11 @@ class SessionManager:
         Args:
             name: チェックポイント名
         """
-        checkpoint_file = self.backup_dir / f"{name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pkl"
+        checkpoint_file = self.backup_dir / f"{name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
 
         try:
-            with open(checkpoint_file, 'wb') as f:
-                pickle.dump(self.session_data, f)
+            with open(checkpoint_file, 'w', encoding='utf-8') as f:
+                json.dump(self.session_data, f, indent=2, ensure_ascii=False)
 
             logger.success(f"Checkpoint created: {checkpoint_file.name}")
 
@@ -258,8 +258,8 @@ class SessionManager:
             return False
 
         try:
-            with open(checkpoint_file, 'rb') as f:
-                self.session_data = pickle.load(f)
+            with open(checkpoint_file, 'r', encoding='utf-8') as f:
+                self.session_data = json.load(f)
 
             logger.success(f"Restored from checkpoint: {checkpoint_name}")
             return True
@@ -275,7 +275,7 @@ class SessionManager:
         Returns:
             チェックポイントファイルのリスト
         """
-        checkpoints = list(self.backup_dir.glob("*.pkl"))
+        checkpoints = list(self.backup_dir.glob("*.json"))
         return [cp.name for cp in sorted(checkpoints, reverse=True)]
 
     def __enter__(self):
