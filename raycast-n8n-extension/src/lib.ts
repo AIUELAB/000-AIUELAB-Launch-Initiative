@@ -1,4 +1,5 @@
 import { LocalStorage, getPreferenceValues } from "@raycast/api";
+import { readFile } from "fs/promises";
 
 export type Preferences = {
   baseUrl?: string;
@@ -25,17 +26,38 @@ export type HistoryItem = {
   at: number;
 };
 
+function expandHomePath(p: string): string {
+  if (p.startsWith("~/")) return `${process.env.HOME || ""}${p.slice(1)}`;
+  return p;
+}
+
 async function loadExternalConfig(): Promise<ExternalConfig | null> {
   try {
     const prefs = getPreferenceValues<Preferences>();
-    const p = prefs.externalConfigPath?.trim();
-    if (!p) return null;
-    // Raycast 環境では Node fetch で file:// は使えないため、HTTP でなければ中止
-    if (/^https?:\/\//i.test(p)) {
-      const res = await fetch(p);
+    const raw = prefs.externalConfigPath?.trim();
+    if (!raw) return null;
+
+    // URL (HTTP/HTTPS)
+    if (/^https?:\/\//i.test(raw)) {
+      const res = await fetch(raw);
       if (!res.ok) return null;
       return (await res.json()) as ExternalConfig;
     }
+
+    // file:// URL → ローカルパスへ
+    if (raw.startsWith("file://")) {
+      const path = raw.replace(/^file:\/\//, "");
+      const buf = await readFile(path);
+      return JSON.parse(buf.toString()) as ExternalConfig;
+    }
+
+    // 絶対/ホーム相対パス
+    if (raw.startsWith("/") || raw.startsWith("~/")) {
+      const path = expandHomePath(raw);
+      const buf = await readFile(path);
+      return JSON.parse(buf.toString()) as ExternalConfig;
+    }
+
     return null;
   } catch {
     return null;

@@ -1,0 +1,5 @@
+{
+  "baseUrl": "http://localhost:5678",
+  "apiKey": "your-api-key-here",
+  "apiKeyHeaderName": "X-API-Key"
+}
