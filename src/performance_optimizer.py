@@ -94,7 +94,8 @@ class PersistentCache:
         self.index_file = self.cache_dir / "index.json"
         self.index: dict[str, dict] = {}
         self._lock = asyncio.Lock()
-        asyncio.create_task(self._load_index())
+        # Keep reference to avoid premature GC (task is awaited implicitly via runtime loop)
+        self._load_task = asyncio.create_task(self._load_index())
 
     async def _load_index(self):
         """Load cache index from disk"""
