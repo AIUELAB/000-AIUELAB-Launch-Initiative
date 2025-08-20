@@ -172,7 +172,9 @@ class OllamaManager:
 
 
 # Example usage functions
-def code_review(code: str, model: str = "codellama:7b") -> str:
+DEFAULT_CODE_MODEL = "codellama:7b"
+
+def code_review(code: str, model: str = DEFAULT_CODE_MODEL) -> str:
     """Perform automated code review using Ollama.
 
     Analyzes code for potential bugs, performance issues,
@@ -222,7 +224,7 @@ def explain_code(code: str, model: str = "llama3.2:3b") -> str:
     return manager.chat(prompt, system)
 
 
-def generate_tests(code: str, model: str = "codellama:7b") -> str:
+def generate_tests(code: str, model: str = DEFAULT_CODE_MODEL) -> str:
     """Generate comprehensive unit tests for given code.
 
     Creates pytest-compatible test cases covering various scenarios
@@ -247,7 +249,7 @@ def generate_tests(code: str, model: str = "codellama:7b") -> str:
     return manager.chat(prompt, system)
 
 
-def refactor_code(code: str, model: str = "codellama:7b") -> str:
+def refactor_code(code: str, model: str = DEFAULT_CODE_MODEL) -> str:
     """Suggest code refactoring for improved quality.
 
     Analyzes code and provides refactored version with improvements

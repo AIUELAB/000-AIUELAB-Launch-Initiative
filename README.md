@@ -132,6 +132,7 @@ npm run n8n:status
 ```
 
 メモ:
+
 - ポートを変更した場合は Raycast も同じポートに合わせてください
 - 鍵/認証情報は `/Users/admin/Documents/key` を利用（リポジトリ外）
 
@@ -542,8 +543,6 @@ claude-code
 ```
 
 ### Happy Coding with MCP 🚀
-
-```
 
 ## Raycast 外部設定ファイル（任意）
 
