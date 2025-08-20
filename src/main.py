@@ -1,17 +1,11 @@
 #!/usr/bin/env python3
-"""
-メインアプリケーションモジュール（MCP対応版）
+"""Claude Code MCP Template のメインモジュール(MCP対応)。"""
 
-このファイルはアプリケーションのエントリーポイントです。
-MCPサーバーとの連携機能を含んでいます。
-"""
-
-import asyncio
 import os
 import re
 import sys
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import Any
 
 import click
 from dotenv import load_dotenv
@@ -22,7 +16,7 @@ from rich.table import Table
 # 環境変数の読み込み
 load_dotenv()
 load_dotenv(".env.mcp")  # プロジェクトルートの.env.mcp
-load_dotenv("mcp-config/.env.mcp")  # mcp-configディレクトリの.env.mcp（後方互換性）
+load_dotenv("mcp-config/.env.mcp")  # mcp-configディレクトリの.env.mcp(後方互換性)
 
 # Richコンソールの初期化
 console = Console()
@@ -38,7 +32,18 @@ logger.add(
 
 @dataclass
 class AppConfig:
-    """アプリケーション設定"""
+    """Application configuration dataclass.
+
+    Centralizes all application settings loaded from environment variables.
+    Supports debug mode, environment selection, and MCP server detection.
+
+    Attributes:
+        app_name: Name of the application.
+        version: Application version string.
+        debug: Whether debug mode is enabled.
+        environment: Current environment (development/staging/production).
+        mcp_enabled: Whether MCP servers are configured with API keys.
+    """
 
     app_name: str
     version: str
@@ -48,7 +53,18 @@ class AppConfig:
 
     @classmethod
     def from_env(cls) -> "AppConfig":
-        """環境変数から設定を読み込む"""
+        """Load configuration from environment variables.
+
+        Reads from both .env and .env.mcp files to construct
+        the application configuration.
+
+        Returns:
+            AppConfig instance with settings loaded from environment.
+
+        Example:
+            >>> config = AppConfig.from_env()
+            >>> print(f"Running {config.app_name} v{config.version}")
+        """
         return cls(
             app_name=os.getenv("APP_NAME", "Claude Code MCP Template"),
             version=os.getenv("APP_VERSION", "1.0.0"),
@@ -59,14 +75,24 @@ class AppConfig:
 
 
 class Application:
-    """メインアプリケーションクラス"""
+    """Main application class for Claude Code MCP Template.
 
-    def __init__(self, config: AppConfig):
-        """
-        アプリケーションの初期化
+    Manages the application lifecycle, MCP server status checking,
+    and core business logic execution.
+
+    Attributes:
+        config: Application configuration loaded from environment.
+    """
+
+    def __init__(self, config: AppConfig) -> None:
+        """Initialize the application with configuration.
 
         Args:
-            config: アプリケーション設定
+            config: Application configuration object containing
+                   settings loaded from environment variables.
+
+        Note:
+            Logs initialization status and MCP server availability.
         """
         self.config = config
         logger.info(f"Initializing {config.app_name} v{config.version}")
@@ -77,7 +103,16 @@ class Application:
             logger.warning("MCP servers not configured (missing API keys)")
 
     def run(self) -> None:
-        """アプリケーションのメイン処理を実行"""
+        """Execute the main application workflow.
+
+        Performs the following operations:
+        1. Display application information
+        2. Check MCP server status
+        3. Process sample data
+
+        This method demonstrates the typical application flow
+        and MCP integration capabilities.
+        """
         logger.info("Application started")
 
         # サンプル処理
@@ -88,7 +123,12 @@ class Application:
         logger.info("Application finished")
 
     def display_info(self) -> None:
-        """アプリケーション情報を表示"""
+        """Display application information in a formatted table.
+
+        Shows key application details including name, version,
+        environment, debug status, and MCP availability using
+        Rich console formatting.
+        """
         table = Table(title=f"{self.config.app_name} Information")
         table.add_column("Property", style="cyan", no_wrap=True)
         table.add_column("Value", style="magenta")
@@ -102,7 +142,13 @@ class Application:
         console.print(table)
 
     def check_mcp_status(self) -> None:
-        """MCPサーバーの状態をチェック"""
+        """Check and display MCP server configuration status.
+
+        Scans environment variables to determine which MCP servers
+        are configured and displays their status in a formatted table.
+        Also lists always-available MCP servers that don't require
+        API keys.
+        """
         console.print("\n[bold cyan]MCP Server Status:[/bold cyan]")
 
         mcp_servers = {
@@ -126,7 +172,7 @@ class Application:
 
         console.print(table)
 
-        # 基本MCPサーバー（設定不要）
+        # 基本MCPサーバー(設定不要)
         console.print("\n[bold cyan]Always Available:[/bold cyan]")
         console.print("  • filesystem - File system operations")
         console.print("  • fetch - Web fetching")
@@ -135,12 +181,20 @@ class Application:
         console.print("  • ide - IDE integration")
         console.print("  • memory - Memory management")
 
-    def process_data(self) -> Dict[str, Any]:
-        """
-        データ処理のサンプル
+    def process_data(self) -> dict[str, Any]:
+        """Process sample data to demonstrate application functionality.
 
         Returns:
-            処理結果の辞書
+            Dictionary containing:
+            - status: Processing status ("success" or "error")
+            - items_processed: Number of items processed
+            - message: Human-readable status message
+            - mcp_ready: Whether MCP servers are available
+
+        Example:
+            >>> app = Application(config)
+            >>> result = app.process_data()
+            >>> print(f"Processed {result['items_processed']} items")
         """
         logger.debug("Processing data...")
 
@@ -160,39 +214,60 @@ class Application:
         return result
 
 
-def calculate_sum(numbers: List[float]) -> float:
-    """
-    数値のリストの合計を計算する
+def calculate_sum(numbers: list[float]) -> float:
+    """Calculate the sum of a list of numbers.
 
     Args:
-        numbers: 合計する数値のリスト
+        numbers: List of numbers to sum. Can be integers or floats.
 
     Returns:
-        数値の合計
+        The sum of all numbers in the list.
+
+    Example:
+        >>> calculate_sum([1.5, 2.5, 3.0])
+        7.0
+        >>> calculate_sum([])
+        0.0
     """
     return sum(numbers)
 
 
 def validate_email(email: str) -> bool:
-    """
-    メールアドレスの形式を検証する
+    """Validate email address format using regex.
 
     Args:
-        email: 検証するメールアドレス
+        email: Email address string to validate.
 
     Returns:
-        有効な形式の場合True、そうでない場合False
+        True if the email format is valid, False otherwise.
+
+    Example:
+        >>> validate_email("user@example.com")
+        True
+        >>> validate_email("invalid.email")
+        False
+
+    Note:
+        Uses a simple regex pattern that covers most common
+        email formats but may not handle all edge cases.
     """
     if not email:
         return False
 
     # 簡単なメールアドレスの正規表現パターン
-    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
     return bool(re.match(pattern, email))
 
 
-async def demonstrate_mcp_usage():
-    """MCPサーバーの使用方法をデモンストレーション"""
+def demonstrate_mcp_usage() -> None:
+    """Demonstrate MCP server usage with example commands.
+
+    Displays example commands for various MCP servers including
+    GitHub, Brave Search, Filesystem, Playwright, and Firecrawl.
+
+    This function helps users understand how to interact with
+    different MCP servers through Claude.
+    """
     console.print("\n[bold yellow]MCP Server Usage Examples:[/bold yellow]\n")
 
     examples = [
@@ -226,15 +301,30 @@ async def demonstrate_mcp_usage():
 
 @click.group()
 @click.version_option(version="1.0.0")
-def cli():
-    """Claude Code MCP Template CLI"""
+def cli() -> None:
+    """Claude Code MCP Template CLI.
+
+    Main command group for the Claude Code MCP Template application.
+    Provides subcommands for running the app, checking environment,
+    validating data, and demonstrating MCP capabilities.
+
+    Use --help with any subcommand for detailed information.
+    """
     pass
 
 
 @cli.command()
 @click.option("--debug", is_flag=True, help="Enable debug mode")
-def run(debug: bool):
-    """Run the application"""
+def run(debug: bool) -> None:
+    """Run the main application.
+
+    Args:
+        debug: Enable debug mode for verbose logging.
+
+    Example:
+        $ python src/main.py run
+        $ python src/main.py run --debug
+    """
     config = AppConfig.from_env()
     if debug:
         config.debug = True
@@ -251,8 +341,15 @@ def run(debug: bool):
 
 
 @cli.command()
-def info():
-    """Display application and MCP information"""
+def info() -> None:
+    """Display application and MCP server information.
+
+    Shows application configuration details and the status
+    of all configured MCP servers.
+
+    Example:
+        $ python src/main.py info
+    """
     config = AppConfig.from_env()
     app = Application(config)
     app.display_info()
@@ -260,15 +357,31 @@ def info():
 
 
 @cli.command()
-def mcp_demo():
-    """Show MCP server usage examples"""
-    asyncio.run(demonstrate_mcp_usage())
+def mcp_demo() -> None:
+    """Show MCP server usage examples.
+
+    Displays example commands for interacting with various
+    MCP servers to help users understand the available
+    capabilities.
+
+    Example:
+        $ python src/main.py mcp-demo
+    """
+    demonstrate_mcp_usage()
 
 
-@cli.command(name='sum')
-@click.argument('numbers', nargs=-1, type=float)
-def sum_command(numbers):
-    """Calculate the sum of numbers"""
+@cli.command(name="sum")
+@click.argument("numbers", nargs=-1, type=float)
+def sum_command(numbers: tuple[float, ...]) -> None:
+    """Calculate the sum of provided numbers.
+
+    Args:
+        numbers: Variable number of numeric arguments to sum.
+
+    Example:
+        $ python src/main.py sum 1.5 2.5 3.0
+        Sum: 7.0
+    """
     if not numbers:
         console.print("[yellow]No numbers provided[/yellow]")
         return
@@ -278,9 +391,17 @@ def sum_command(numbers):
 
 
 @cli.command()
-@click.argument('email')
-def validate(email):
-    """Validate an email address"""
+@click.argument("email")
+def validate(email: str) -> None:
+    """Validate an email address format.
+
+    Args:
+        email: Email address to validate.
+
+    Example:
+        $ python src/main.py validate user@example.com
+        ✓ user@example.com is valid
+    """
     if validate_email(email):
         console.print(f"[green]✓[/green] {email} is valid")
     else:
@@ -288,8 +409,16 @@ def validate(email):
 
 
 @cli.command()
-def check_env():
-    """Check environment variables and API keys"""
+def check_env() -> None:
+    """Check environment variables and API keys.
+
+    Verifies that all required and optional environment
+    variables are properly configured. Helps diagnose
+    MCP server configuration issues.
+
+    Example:
+        $ python src/main.py check-env
+    """
     console.print("[bold cyan]Environment Check:[/bold cyan]\n")
 
     required_vars = {
@@ -333,5 +462,18 @@ def check_env():
         console.print("  Edit mcp-config/.env.mcp to add your API keys.")
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Main entry point for the application.
+
+    Initializes the CLI and handles command routing.
+    This function is called when the script is executed directly.
+
+    Example:
+        $ python src/main.py --help
+        $ python src/main.py run
+    """
     cli()
+
+
+if __name__ == "__main__":
+    main()

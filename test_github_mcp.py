@@ -19,11 +19,13 @@ from rich.table import Table
 
 # Add src to path
 sys.path.append(str(Path(__file__).parent))
+from src.github_mcp_integration import GitHubMCPIntegration
 
 console = Console()
+MAX_PREVIEW_LEN = 500
 
 
-def check_environment():
+def check_environment() -> bool:
     """Check if all required environment variables are set."""
     load_dotenv()
 
@@ -55,13 +57,12 @@ def check_environment():
                 status = "✅ Set"
             else:
                 status = "✅ Set"
+        elif var == "GITHUB_PAT":
+            status = "❌ Missing"
+        elif var in ["OPENAI_API_KEY", "ANTHROPIC_API_KEY"]:
+            status = "⚠️ Not set"
         else:
-            if var == "GITHUB_PAT":
-                status = "❌ Missing"
-            elif var in ["OPENAI_API_KEY", "ANTHROPIC_API_KEY"]:
-                status = "⚠️ Not set"
-            else:
-                status = "❌ Missing"
+            status = "❌ Missing"
 
         table.add_row(var, description, status)
 
@@ -81,7 +82,7 @@ def check_environment():
     return True
 
 
-def check_config_file():
+def check_config_file() -> bool:
     """Check if GitHub MCP configuration file exists."""
     console.print("\n")
     console.print(Panel.fit("📁 Checking Configuration File", border_style="blue"))
@@ -92,7 +93,7 @@ def check_config_file():
         console.print(f"✅ Configuration file found: {config_path}")
 
         try:
-            with open(config_path) as f:
+            with config_path.open() as f:
                 config = json.load(f)
             console.print("✅ Configuration file is valid JSON")
 
@@ -110,14 +111,12 @@ def check_config_file():
         return False
 
 
-async def test_mcp_connection():
+async def test_mcp_connection() -> bool:
     """Test the MCP connection to GitHub."""
     console.print("\n")
     console.print(Panel.fit("🔌 Testing MCP Connection", border_style="blue"))
 
     try:
-        from src.github_mcp_integration import GitHubMCPIntegration
-
         # Determine which LLM provider to use
         if os.getenv("OPENAI_API_KEY"):
             provider = "openai"
@@ -134,7 +133,7 @@ async def test_mcp_connection():
 
         # Try to setup
         console.print("Setting up GitHub MCP integration...")
-        await github.setup(max_steps=10)
+        await asyncio.to_thread(github.setup, max_steps=10)
         console.print("✅ GitHub MCP integration initialized successfully")
 
         # Try a simple query
@@ -147,7 +146,7 @@ async def test_mcp_connection():
             console.print("✅ Test query executed successfully")
             console.print(
                 Panel(
-                    result[:500] + "..." if len(result) > 500 else result,
+                    result[:MAX_PREVIEW_LEN] + "..." if len(result) > MAX_PREVIEW_LEN else result,
                     title="Query Result (truncated)",
                     border_style="green",
                 )
@@ -168,7 +167,7 @@ async def test_mcp_connection():
         return False
 
 
-async def main():
+async def main() -> None:
     """Main test function."""
     console.print(
         Panel.fit(
@@ -189,9 +188,8 @@ async def main():
         all_passed = False
 
     # If basic checks pass, test the connection
-    if all_passed:
-        if not await test_mcp_connection():
-            all_passed = False
+    if all_passed and not await test_mcp_connection():
+        all_passed = False
 
     # Final result
     console.print("\n" + "=" * 50)

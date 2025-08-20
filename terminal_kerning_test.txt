@@ -1,0 +1,35 @@
+Terminal Kerning Test
+=====================
+
+Regular Text:
+/help for help, /status for your current setup
+
+Monospace Characters:
+0123456789
+ABCDEFGHIJ
+abcdefghij
+!@#$%^&*()
+
+Code Sample:
+def calculate_sum(a, b):
+    """Calculate the sum of two numbers."""
+    return a + b
+
+Special Characters:
+→ ← ↑ ↓ ⌘ ⌥ ⇧ ⌃ ⌫ ⏎
+
+Unicode Box Drawing:
+┌─────────────────┐
+│ Box Drawing     │
+├─────────────────┤
+│ Test Content    │
+└─────────────────┘
+
+Letter Spacing Test:
+i i i i i i i i i i
+l l l l l l l l l l
+| | | | | | | | | |
+1 1 1 1 1 1 1 1 1 1
+
+If the above text appears properly spaced and readable,
+the kerning fix has been successfully applied.

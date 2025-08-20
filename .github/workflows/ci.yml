@@ -1,164 +1,164 @@
 name: CI/CD Pipeline
 
 on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main, develop ]
-  schedule:
-    # 毎日午前3時に実行（JST 12:00）
-    - cron: '0 18 * * *'
+    push:
+        branches: [main, develop]
+    pull_request:
+        branches: [main, develop]
+    schedule:
+        # 毎日午前3時に実行（JST 12:00）
+        - cron: "0 18 * * *"
 
 env:
-  PYTHON_VERSION: '3.11'
-  NODE_VERSION: '18'
+    PYTHON_VERSION: "3.11"
+    NODE_VERSION: "18"
 
 jobs:
-  lint:
-    name: Lint Code
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    lint:
+        name: Lint Code
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Cache Python dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+            - name: Cache Python dependencies
+              uses: actions/cache@v3
+              with:
+                  path: ~/.cache/pip
+                  key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+                  restore-keys: |
+                      ${{ runner.os }}-pip-
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install ruff mypy bandit
+            - name: Install dependencies
+              run: |
+                  python -m pip install --upgrade pip
+                  pip install -r requirements.txt
+                  pip install -r requirements-dev.txt
 
-      - name: Run Ruff
-        run: |
-          ruff check src tests --output-format=github
-          ruff format src tests --check
+            - name: Run Ruff
+              run: |
+                  ruff check src tests --output-format=github
+                  ruff format src tests --check
 
-      - name: Run mypy
-        run: mypy src --ignore-missing-imports
+            - name: Run mypy
+              run: mypy src --ignore-missing-imports
 
-      - name: Run bandit
-        run: bandit -r src -ll
+            - name: Run bandit
+              run: bandit -r src -ll
 
-  test:
-    name: Run Tests
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ['3.9', '3.10', '3.11', '3.12']
+    test:
+        name: Run Tests
+        runs-on: ${{ matrix.os }}
+        strategy:
+            matrix:
+                os: [ubuntu-latest, macos-latest, windows-latest]
+                python-version: ["3.11", "3.12"]
 
-    steps:
-      - uses: actions/checkout@v4
+        steps:
+            - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: ${{ matrix.python-version }}
 
-      - name: Cache Python dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+            - name: Cache Python dependencies
+              uses: actions/cache@v3
+              with:
+                  path: ~/.cache/pip
+                  key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+                  restore-keys: |
+                      ${{ runner.os }}-pip-
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest pytest-cov
+            - name: Install dependencies
+              run: |
+                  python -m pip install --upgrade pip
+                  pip install -r requirements.txt
+                  pip install pytest pytest-cov pytest-asyncio pytest-mock
 
-      - name: Run tests with coverage
-        run: |
-          pytest tests/ -v --cov=src --cov-report=xml --cov-report=term
+            - name: Run tests with coverage
+              run: |
+                  pytest tests/ -v --cov=src --cov-report=xml --cov-report=term --tb=short
 
-      - name: Upload coverage to Codecov
-        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
-        uses: codecov/codecov-action@v3
-        with:
-          file: ./coverage.xml
-          flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: false
+            - name: Upload coverage to Codecov
+              if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+              uses: codecov/codecov-action@v3
+              with:
+                  file: ./coverage.xml
+                  flags: unittests
+                  name: codecov-umbrella
+                  fail_ci_if_error: false
 
-  security:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    security:
+        name: Security Scan
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install bandit safety pip-audit semgrep
+            - name: Install dependencies
+              run: |
+                  python -m pip install --upgrade pip
+                  pip install -r requirements.txt
+                  pip install bandit==1.7.9 safety==3.0.0 pip-audit==2.7.3 semgrep==1.45.0
 
-      - name: Run bandit
-        run: bandit -r src -f json -o bandit-report.json
+            - name: Run bandit
+              run: bandit -r src -f json -o bandit-report.json
 
-      - name: Run safety check
-        run: safety check --json
-        continue-on-error: true
+            - name: Run safety check
+              run: safety check --json
+              continue-on-error: true
 
-      - name: Run pip-audit
-        run: pip-audit
-        continue-on-error: true
+            - name: Run pip-audit
+              run: pip-audit
+              continue-on-error: true
 
-      - name: Check for secrets
-        run: python scripts/check_no_secrets.py
-        continue-on-error: true
+            - name: Check for secrets
+              run: python scripts/check_no_secrets.py
+              continue-on-error: true
 
-      - name: Run Semgrep SAST
-        run: |
-          semgrep --config=auto \
-                  --config=.semgrep.yml \
-                  --json \
-                  --output=semgrep-report.json \
-                  src/ tests/
-        continue-on-error: true
+            - name: Run Semgrep SAST
+              run: |
+                  semgrep --config=auto \
+                          --config=.semgrep.yml \
+                          --json \
+                          --output=semgrep-report.json \
+                          src/ tests/
+              continue-on-error: true
 
-      - name: Upload security reports
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: security-reports
-          path: |
-            bandit-report.json
-            semgrep-report.json
+            - name: Upload security reports
+              uses: actions/upload-artifact@v3
+              if: always()
+              with:
+                  name: security-reports
+                  path: |
+                      bandit-report.json
+                      semgrep-report.json
 
-  validate-mcp:
-    name: Validate MCP Configuration
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    validate-mcp:
+        name: Validate MCP Configuration
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
+            - name: Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
 
-      - name: Validate MCP config
-        run: |
-          python scripts/validate_mcp_config.py
+            - name: Validate MCP config
+              run: |
+                  python scripts/validate_mcp_config.py

@@ -1,51 +1,135 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:base",
-    ":dependencyDashboard",
-    ":semanticPrefixFixDepsChoreOthers",
-    ":enablePreCommit",
-    "group:allNonMajor"
-  ],
-  "python": {
-    "enabled": true
-  },
-  "pip_requirements": {
-    "fileMatch": ["requirements\\.txt$", "requirements\\.in$"]
-  },
-  "packageRules": [
-    {
-      "matchUpdateTypes": ["major"],
-      "automerge": false
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "extends": [
+        "config:recommended",
+        ":dependencyDashboard",
+        ":semanticCommitTypeAll(chore)",
+        "group:monorepos",
+        "group:recommended"
+    ],
+    "timezone": "Asia/Tokyo",
+    "schedule": ["before 3am on Monday"],
+    "labels": ["dependencies", "renovate"],
+    "packageRules": [
+        {
+            "description": "Automatically merge minor and patch updates",
+            "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+            "automerge": true,
+            "automergeType": "pr",
+            "platformAutomerge": true
+        },
+        {
+            "description": "Disable automerge for major updates",
+            "matchUpdateTypes": ["major"],
+            "automerge": false
+        },
+        {
+            "description": "Python dependencies",
+            "matchManagers": [
+                "pip_requirements",
+                "pip_setup",
+                "pipenv",
+                "poetry"
+            ],
+            "groupName": "Python dependencies"
+        },
+        {
+            "description": "JavaScript dependencies",
+            "matchManagers": ["npm"],
+            "groupName": "JavaScript dependencies"
+        },
+        {
+            "description": "Security updates",
+            "matchDatasources": ["pypi", "npm"],
+            "matchUpdateTypes": ["patch"],
+            "labels": ["security"],
+            "prPriority": 10,
+            "automerge": true
+        },
+        {
+            "description": "Group pytest packages",
+            "matchPackagePatterns": ["^pytest"],
+            "groupName": "pytest packages"
+        },
+        {
+            "description": "Group linting tools",
+            "matchPackageNames": [
+                "ruff",
+                "black",
+                "mypy",
+                "pylint",
+                "bandit",
+                "semgrep"
+            ],
+            "groupName": "Linting tools"
+        },
+        {
+            "description": "Group type checking tools",
+            "matchPackageNames": ["pyright", "basedpyright", "beartype"],
+            "groupName": "Type checking tools"
+        },
+        {
+            "description": "Pin GitHub Actions to commit hash",
+            "matchManagers": ["github-actions"],
+            "pinDigests": true
+        },
+        {
+            "description": "Update GitHub Actions weekly",
+            "matchManagers": ["github-actions"],
+            "schedule": ["before 3am on Monday"],
+            "automerge": true
+        },
+        {
+            "description": "Group AWS/Cloud SDKs",
+            "matchPackagePatterns": ["^boto3", "^azure", "^google-cloud"],
+            "groupName": "Cloud SDKs"
+        },
+        {
+            "description": "Group MCP related packages",
+            "matchPackagePatterns": ["^mcp", "^langchain"],
+            "groupName": "MCP packages"
+        }
+    ],
+    "pip_requirements": {
+        "fileMatch": ["requirements.*\\.txt"]
     },
-    {
-      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
-      "automerge": true,
-      "automergeType": "pr"
+    "python": {
+        "ignorePythonCompatibility": false
     },
-    {
-      "matchDepTypes": ["devDependencies"],
-      "automerge": true
+    "vulnerabilityAlerts": {
+        "enabled": true,
+        "labels": ["security"],
+        "automerge": true
     },
-    {
-      "matchPackagePatterns": ["^@modelcontextprotocol/"],
-      "groupName": "MCP packages",
-      "schedule": ["after 10pm on sunday"]
-    }
-  ],
-  "vulnerabilityAlerts": {
-    "labels": ["security"],
-    "automerge": true,
-    "assignees": ["@me"]
-  },
-  "prConcurrentLimit": 3,
-  "prCreation": "immediate",
-  "rangeStrategy": "auto",
-  "schedule": ["before 3am on monday"],
-  "timezone": "Asia/Tokyo",
-  "labels": ["dependencies"],
-  "commitMessagePrefix": "chore(deps):",
-  "commitMessageAction": "update",
-  "commitMessageTopic": "{{depName}}",
-  "commitMessageExtra": "to {{newVersion}}"
+    "prConcurrentLimit": 10,
+    "prCreation": "immediate",
+    "semanticCommits": "enabled",
+    "commitMessagePrefix": "chore(deps):",
+    "commitMessageAction": "update",
+    "commitMessageTopic": "{{depName}}",
+    "commitMessageExtra": "to {{newVersion}}",
+    "prHeader": "This PR was automatically created by Renovate Bot.",
+    "prFooter": "---\n\n- [ ] If you want to rebase/retry this PR, check this box\n\nThis PR has been generated by [Renovate Bot](https://github.com/renovatebot/renovate).",
+    "suppressNotifications": ["prIgnoreNotification"],
+    "rebaseWhen": "conflicted",
+    "assignees": [],
+    "reviewers": [],
+    "ignorePaths": [
+        "**/node_modules/**",
+        "**/vendor/**",
+        "**/examples/**",
+        "**/__tests__/**",
+        "**/test/**",
+        "**/tests/**"
+    ],
+    "rangeStrategy": "auto",
+    "lockFileMaintenance": {
+        "enabled": true,
+        "schedule": ["before 3am on the first day of the month"]
+    },
+    "dependencyDashboard": true,
+    "dependencyDashboardTitle": "Dependency Dashboard",
+    "dependencyDashboardHeader": "This issue lists Renovate updates and detected dependencies. Read the [Dependency Dashboard](https://docs.renovatebot.com/key-concepts/dashboard/) docs to learn more.",
+    "dependencyDashboardFooter": "---\n\n- [ ] Check this box to trigger a manual rebase of all PRs\n- [ ] Check this box to trigger a manual run of Renovate",
+    "osvVulnerabilityAlerts": true
 }

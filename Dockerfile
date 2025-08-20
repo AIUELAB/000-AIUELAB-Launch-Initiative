@@ -3,7 +3,7 @@
 # 2025年最新版
 
 # Stage 1: Builder
-FROM python:3.11-slim as builder
+FROM python:3.11-slim AS builder
 
 WORKDIR /app
 
@@ -19,7 +19,7 @@ COPY requirements.txt .
 RUN pip install --user --no-cache-dir -r requirements.txt
 
 # Stage 2: Node.js Builder for MCP
-FROM node:18-slim as node-builder
+FROM node:18-slim AS node-builder
 
 WORKDIR /mcp
 
@@ -27,8 +27,7 @@ WORKDIR /mcp
 RUN npm install -g \
     @modelcontextprotocol/server-filesystem \
     @modelcontextprotocol/server-github \
-    @modelcontextprotocol/server-memory \
-    @modelcontextprotocol/server-fetch
+    @modelcontextprotocol/server-memory
 
 # Stage 3: Final Image
 FROM python:3.11-slim

@@ -12,6 +12,8 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.append(str(Path(__file__).parent.parent))
 
+from collections.abc import Awaitable, Callable
+
 from loguru import logger
 from rich.console import Console
 from rich.panel import Panel
@@ -22,6 +24,9 @@ from src.github_mcp_integration import GitHubMCPIntegration
 
 console = Console()
 
+OWNER_PROMPT = "Enter repository owner"
+REPO_PROMPT = "Enter repository name"
+
 
 class GitHubWorkflowExamples:
     """Examples of common GitHub workflows using MCP."""
@@ -31,7 +36,7 @@ class GitHubWorkflowExamples:
 
     async def setup(self):
         """Initialize the GitHub MCP integration."""
-        await self.github.setup(max_steps=50)
+        await asyncio.to_thread(self.github.setup, max_steps=50)
 
     async def workflow_repository_analysis(self):
         """
@@ -39,8 +44,8 @@ class GitHubWorkflowExamples:
         """
         console.print(Panel.fit("📊 Repository Analysis Workflow", border_style="cyan"))
 
-        owner = Prompt.ask("Enter repository owner", default="microsoft")
-        repo = Prompt.ask("Enter repository name", default="vscode")
+        owner = Prompt.ask(OWNER_PROMPT, default="microsoft")
+        repo = Prompt.ask(REPO_PROMPT, default="vscode")
 
         # Get repository overview
         console.print("\n[bold]Getting repository overview...[/bold]")
@@ -62,8 +67,8 @@ class GitHubWorkflowExamples:
         """
         console.print(Panel.fit("🏷️ Issue Triage Workflow", border_style="cyan"))
 
-        owner = Prompt.ask("Enter repository owner", default="facebook")
-        repo = Prompt.ask("Enter repository name", default="react")
+        owner = Prompt.ask(OWNER_PROMPT, default="facebook")
+        repo = Prompt.ask(REPO_PROMPT, default="react")
 
         console.print("\n[bold]Analyzing issues for triage...[/bold]")
         result = await self.github.run_custom_query(
@@ -87,8 +92,8 @@ class GitHubWorkflowExamples:
         """
         console.print(Panel.fit("👁️ Pull Request Review Helper", border_style="cyan"))
 
-        owner = Prompt.ask("Enter repository owner", default="pytorch")
-        repo = Prompt.ask("Enter repository name", default="pytorch")
+        owner = Prompt.ask(OWNER_PROMPT, default="pytorch")
+        repo = Prompt.ask(REPO_PROMPT, default="pytorch")
 
         console.print("\n[bold]Analyzing pull requests...[/bold]")
         result = await self.github.run_custom_query(
@@ -147,8 +152,8 @@ class GitHubWorkflowExamples:
         """
         console.print(Panel.fit("🔒 Security & Dependency Check", border_style="cyan"))
 
-        owner = Prompt.ask("Enter repository owner")
-        repo = Prompt.ask("Enter repository name")
+        owner = Prompt.ask(OWNER_PROMPT)
+        repo = Prompt.ask(REPO_PROMPT)
 
         console.print("\n[bold]Running security analysis...[/bold]")
         result = await self.github.run_custom_query(
@@ -170,8 +175,8 @@ class GitHubWorkflowExamples:
         """
         console.print(Panel.fit("📝 Release Notes Generator", border_style="cyan"))
 
-        owner = Prompt.ask("Enter repository owner")
-        repo = Prompt.ask("Enter repository name")
+        owner = Prompt.ask(OWNER_PROMPT)
+        repo = Prompt.ask(REPO_PROMPT)
         since_tag = Prompt.ask("Since which tag/release? (leave empty for latest)", default="")
 
         query = f"""Generate release notes for {owner}/{repo}"""
@@ -304,11 +309,7 @@ async def interactive_menu():
     try:
         await examples.setup()
 
-        while True:
-            console.print("\n" + "=" * 50)
-            console.print(Panel.fit("🌟 GitHub MCP Workflow Examples", border_style="bold green"))
-
-            # Create menu table
+        def build_workflows_table() -> Table:
             table = Table(title="Available Workflows")
             table.add_column("Option", style="cyan", width=8)
             table.add_column("Workflow", style="white")
@@ -325,8 +326,25 @@ async def interactive_menu():
             table.add_row("7", "Project Discovery", "Discover interesting projects")
             table.add_row("8", "Contribution Finder", "Find ways to contribute")
             table.add_row("0", "Exit", "Exit the program")
+            return table
 
-            console.print(table)
+        def get_actions() -> dict[str, Callable[[], Awaitable[None]]]:
+            return {
+                "1": examples.workflow_repository_analysis,
+                "2": examples.workflow_issue_triage,
+                "3": examples.workflow_pr_review_helper,
+                "4": examples.workflow_find_good_first_issues,
+                "5": examples.workflow_dependency_security_check,
+                "6": examples.workflow_release_notes_generator,
+                "7": examples.workflow_project_discovery,
+                "8": examples.workflow_contribution_opportunities,
+            }
+
+        while True:
+            console.print("\n" + "=" * 50)
+            console.print(Panel.fit("🌟 GitHub MCP Workflow Examples", border_style="bold green"))
+
+            console.print(build_workflows_table())
 
             choice = Prompt.ask(
                 "\nSelect a workflow", choices=["0", "1", "2", "3", "4", "5", "6", "7", "8"]
@@ -335,22 +353,13 @@ async def interactive_menu():
             if choice == "0":
                 console.print("[yellow]Goodbye! 👋[/yellow]")
                 break
-            elif choice == "1":
-                await examples.workflow_repository_analysis()
-            elif choice == "2":
-                await examples.workflow_issue_triage()
-            elif choice == "3":
-                await examples.workflow_pr_review_helper()
-            elif choice == "4":
-                await examples.workflow_find_good_first_issues()
-            elif choice == "5":
-                await examples.workflow_dependency_security_check()
-            elif choice == "6":
-                await examples.workflow_release_notes_generator()
-            elif choice == "7":
-                await examples.workflow_project_discovery()
-            elif choice == "8":
-                await examples.workflow_contribution_opportunities()
+            else:
+                action_map = get_actions()
+                action = action_map.get(choice)
+                if action is not None:
+                    await action()
+                else:
+                    console.print("[red]Invalid choice. Please try again.[/red]")
 
             if not Confirm.ask("\n[cyan]Run another workflow?[/cyan]", default=True):
                 break

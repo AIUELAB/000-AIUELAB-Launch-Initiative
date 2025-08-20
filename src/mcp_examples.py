@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-MCP（Model Context Protocol）サーバーを活用するサンプルコード
+MCP(Model Context Protocol)サーバーを活用するサンプルコード
 
 このファイルは、MCPサーバーと連携する際の実装例を示します。
 実際のMCP呼び出しはClaude内で行われますが、
 このコードはMCPサーバーから取得したデータを処理する方法を示しています。
 """
 
-import asyncio
 import json
 import os
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
+import aiofiles
 from dotenv import load_dotenv
 from loguru import logger
 from rich.console import Console
@@ -28,6 +28,9 @@ load_dotenv(".env.mcp")
 console = Console()
 
 
+MAX_TITLE_LENGTH = 50
+
+
 @dataclass
 class GitHubIssue:
     """GitHubのIssue情報を格納するデータクラス"""
@@ -37,8 +40,8 @@ class GitHubIssue:
     state: str
     created_at: datetime
     author: str
-    labels: List[str]
-    body: Optional[str] = None
+    labels: list[str]
+    body: str | None = None
 
 
 @dataclass
@@ -54,13 +57,13 @@ class SearchResult:
 class MCPDataProcessor:
     """MCPサーバーから取得したデータを処理するクラス"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """初期化"""
         self.github_token = os.getenv("GITHUB_TOKEN")
         self.brave_api_key = os.getenv("BRAVE_API_KEY")
         logger.info("MCP Data Processor initialized")
 
-    def process_github_issues(self, issues_data: List[Dict[str, Any]]) -> List[GitHubIssue]:
+    def process_github_issues(self, issues_data: list[dict[str, Any]]) -> list[GitHubIssue]:
         """
         GitHubのIssueデータを処理
 
@@ -73,22 +76,31 @@ class MCPDataProcessor:
         processed_issues = []
 
         for issue in issues_data:
+            created_at_raw = issue.get("created_at") or ""
+            try:
+                created_at_val = datetime.fromisoformat(str(created_at_raw).replace("Z", "+00:00"))
+            except Exception:
+                created_at_val = datetime.now()
+
+            body_raw = issue.get("body")
             processed_issue = GitHubIssue(
-                number=issue.get("number"),
-                title=issue.get("title"),
-                state=issue.get("state"),
-                created_at=datetime.fromisoformat(
-                    issue.get("created_at", "").replace("Z", "+00:00")
-                ),
-                author=issue.get("user", {}).get("login", "unknown"),
-                labels=[label.get("name") for label in issue.get("labels", [])],
-                body=issue.get("body"),
+                number=int(issue.get("number", 0)),
+                title=str(issue.get("title") or ""),
+                state=str(issue.get("state") or ""),
+                created_at=created_at_val,
+                author=str(issue.get("user", {}).get("login") or "unknown"),
+                labels=[
+                    str(label.get("name"))
+                    for label in issue.get("labels", [])
+                    if label.get("name") is not None
+                ],
+                body=str(body_raw) if body_raw is not None else None,
             )
             processed_issues.append(processed_issue)
 
         return processed_issues
 
-    def display_github_issues(self, issues: List[GitHubIssue]) -> None:
+    def display_github_issues(self, issues: list[GitHubIssue]) -> None:
         """
         GitHubのIssueを表形式で表示
 
@@ -106,7 +118,9 @@ class MCPDataProcessor:
             labels_str = ", ".join(issue.labels) if issue.labels else "No labels"
             table.add_row(
                 str(issue.number),
-                issue.title[:50] + "..." if len(issue.title) > 50 else issue.title,
+                issue.title[:MAX_TITLE_LENGTH] + "..."
+                if len(issue.title) > MAX_TITLE_LENGTH
+                else issue.title,
                 issue.state,
                 issue.author,
                 labels_str,
@@ -114,7 +128,7 @@ class MCPDataProcessor:
 
         console.print(table)
 
-    def process_search_results(self, search_data: Dict[str, Any]) -> List[SearchResult]:
+    def process_search_results(self, search_data: dict[str, Any]) -> list[SearchResult]:
         """
         Brave SearchやFirecrawlの検索結果を処理
 
@@ -150,7 +164,7 @@ class MCPDataProcessor:
 
         return results
 
-    def display_search_results(self, results: List[SearchResult]) -> None:
+    def display_search_results(self, results: list[SearchResult]) -> None:
         """
         検索結果を表示
 
@@ -158,14 +172,14 @@ class MCPDataProcessor:
             results: 表示する検索結果のリスト
         """
         for i, result in enumerate(results, 1):
-            console.print(f"\n[bold cyan]{i}. {result.title}[/bold cyan]")
+            console.print(f"\n[bold cyan]{i!s}. {result.title}[/bold cyan]")
             console.print(f"   [link]{result.url}[/link]")
             console.print(f"   [dim]{result.snippet}[/dim]")
             console.print(f"   [yellow]Source: {result.source}[/yellow]")
 
-    async def process_file_operations(self, file_paths: List[str]) -> Dict[str, str]:
+    async def process_file_operations(self, file_paths: list[str]) -> dict[str, str]:
         """
-        ファイルシステム操作の結果を処理（非同期）
+        ファイルシステム操作の結果を処理(非同期)
 
         Args:
             file_paths: 処理するファイルパスのリスト
@@ -173,24 +187,24 @@ class MCPDataProcessor:
         Returns:
             ファイルパスと内容のマッピング
         """
-        file_contents = {}
+        file_contents: dict[str, str] = {}
 
         for path in file_paths:
             file_path = Path(path)
             if file_path.exists():
                 try:
-                    with open(file_path, encoding="utf-8") as f:
-                        file_contents[path] = f.read()
+                    async with aiofiles.open(file_path, encoding="utf-8") as f:
+                        file_contents[path] = await f.read()
                     logger.info(f"Successfully read file: {path}")
                 except Exception as e:
                     logger.error(f"Error reading file {path}: {e}")
-                    file_contents[path] = f"Error: {str(e)}"
+                    file_contents[path] = f"Error: {e!s}"
             else:
                 file_contents[path] = "File not found"
 
         return file_contents
 
-    def generate_markdown_report(self, data: Dict[str, Any]) -> str:
+    def generate_markdown_report(self, data: dict[str, Any]) -> str:
         """
         MCPサーバーから取得したデータをMarkdownレポートに変換
 
@@ -216,7 +230,7 @@ class MCPDataProcessor:
             report.append("\n## Search Results Summary")
             results = data["search_results"]
             report.append(f"- Total Results: {len(results)}")
-            by_source = {}
+            by_source: dict[str, int] = {}
             for r in results:
                 by_source[r.source] = by_source.get(r.source, 0) + 1
             for source, count in by_source.items():
@@ -233,14 +247,14 @@ class MCPDataProcessor:
 class MCPOrchestrator:
     """複数のMCPサーバーを組み合わせて使用するオーケストレーター"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """初期化"""
         self.processor = MCPDataProcessor()
         logger.info("MCP Orchestrator initialized")
 
-    async def analyze_github_repository(self, owner: str, repo: str) -> Dict[str, Any]:
+    def analyze_github_repository(self, owner: str, repo: str) -> dict[str, Any]:
         """
-        GitHubリポジトリを分析（MCPサーバーとの連携をシミュレート）
+        GitHubリポジトリを分析(MCPサーバーとの連携をシミュレート)
 
         Args:
             owner: リポジトリオーナー
@@ -251,25 +265,23 @@ class MCPOrchestrator:
         """
         logger.info(f"Analyzing GitHub repository: {owner}/{repo}")
 
-        # 実際のMCP呼び出しはClaude内で行われます
-        # ここではデータ処理の例を示します
-
-        analysis = {
+        recommendations: list[str] = []
+        analysis: dict[str, Any] = {
             "repository": f"{owner}/{repo}",
             "timestamp": datetime.now().isoformat(),
             "stats": {"issues": 0, "pull_requests": 0, "contributors": 0},
-            "recommendations": [],
+            "recommendations": recommendations,
         }
 
         # 分析結果に基づく推奨事項
-        analysis["recommendations"].append("Consider adding more documentation")
-        analysis["recommendations"].append("Review open issues regularly")
+        recommendations.append("Consider adding more documentation")
+        recommendations.append("Review open issues regularly")
 
         return analysis
 
-    async def research_topic(self, topic: str) -> Dict[str, Any]:
+    def research_topic(self, topic: str) -> dict[str, Any]:
         """
-        トピックについてリサーチ（複数のMCPサーバーを活用）
+        トピックについてリサーチ(複数のMCPサーバーを活用)
 
         Args:
             topic: リサーチするトピック
@@ -279,12 +291,14 @@ class MCPOrchestrator:
         """
         logger.info(f"Researching topic: {topic}")
 
-        research = {
+        sources: list[dict[str, Any]] = []
+        key_points: list[str] = []
+        research: dict[str, Any] = {
             "topic": topic,
             "timestamp": datetime.now().isoformat(),
-            "sources": [],
+            "sources": sources,
             "summary": "",
-            "key_points": [],
+            "key_points": key_points,
         }
 
         # MCPサーバーを組み合わせた処理例
@@ -292,13 +306,15 @@ class MCPOrchestrator:
         # 2. Firecrawlで詳細情報取得
         # 3. filesystemで結果を保存
 
-        research["sources"].append({"type": "web_search", "query": topic, "results_count": 10})
+        sources.append({"type": "web_search", "query": topic, "results_count": 10})
 
-        research["key_points"] = [
-            f"Important finding about {topic} #1",
-            f"Important finding about {topic} #2",
-            f"Important finding about {topic} #3",
-        ]
+        key_points.extend(
+            [
+                f"Important finding about {topic} #1",
+                f"Important finding about {topic} #2",
+                f"Important finding about {topic} #3",
+            ]
+        )
 
         research["summary"] = (
             f"Research on '{topic}' completed successfully with data from multiple sources."
@@ -306,7 +322,7 @@ class MCPOrchestrator:
 
         return research
 
-    def display_analysis(self, analysis: Dict[str, Any]) -> None:
+    def display_analysis(self, analysis: dict[str, Any]) -> None:
         """
         分析結果を表示
 
@@ -317,7 +333,7 @@ class MCPOrchestrator:
         console.print(json.dumps(analysis, indent=2, default=str))
 
 
-async def main():
+def main() -> None:
     """メイン処理"""
     console.print("[bold cyan]MCP Examples - Demonstrating MCP Server Integration[/bold cyan]\n")
 
@@ -325,7 +341,7 @@ async def main():
     processor = MCPDataProcessor()
     orchestrator = MCPOrchestrator()
 
-    # サンプルデータ（実際はMCPサーバーから取得）
+    # サンプルデータ(実際はMCPサーバーから取得)
     sample_issues = [
         {
             "number": 1,
@@ -354,12 +370,12 @@ async def main():
 
     # リポジトリ分析の実行
     console.print("\n[yellow]Analyzing Repository...[/yellow]")
-    analysis = await orchestrator.analyze_github_repository("example", "repo")
+    analysis = orchestrator.analyze_github_repository("example", "repo")
     orchestrator.display_analysis(analysis)
 
     # トピックリサーチの実行
     console.print("\n[yellow]Researching Topic...[/yellow]")
-    research = await orchestrator.research_topic("MCP Server Integration")
+    research = orchestrator.research_topic("MCP Server Integration")
     orchestrator.display_analysis(research)
 
     # レポート生成
@@ -376,5 +392,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    # 非同期処理の実行
-    asyncio.run(main())
+    main()
