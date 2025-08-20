@@ -176,9 +176,10 @@ class SessionManager:
             except Exception as e:
                 logger.error(f"Failed to delete {backup_file.name}: {e}")
 
-    SessionValue: TypeAlias = "str | int | float | bool | dict[str, Any] | list[Any] | None"
+    # 型エイリアスは小文字スネークケースに変更
+    session_value: TypeAlias = "str | int | float | bool | dict[str, Any] | list[Any] | None"
 
-    def set(self, key: str, value: SessionValue) -> None:
+    def set(self, key: str, value: session_value) -> None:
         """
         セッションデータを設定
 
@@ -188,7 +189,7 @@ class SessionManager:
         """
         self.session_data[key] = value
 
-    def get(self, key: str, default: SessionValue = None) -> SessionValue:
+    def get(self, key: str, default: session_value = None) -> session_value:
         """
         セッションデータを取得
 

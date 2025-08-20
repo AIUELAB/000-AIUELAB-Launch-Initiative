@@ -1,6 +1,6 @@
-import { Action, ActionPanel, Detail, Form, Toast, getPreferenceValues, showHUD, showToast, useNavigation } from "@raycast/api";
+import { Action, ActionPanel, Detail, Form, Toast, showHUD, showToast, useNavigation } from "@raycast/api";
 import { useState } from "react";
-import { Preferences, normalizeUrl, postJson, saveHistoryItem, resolveConnection } from "./lib";
+import { normalizeUrl, postJson, saveHistoryItem, resolveConnection } from "./lib";
 
 type RequestParts = {
   body?: string;
@@ -15,7 +15,7 @@ function tryParseJsonObject(text: string, what: string): Record<string, string> 
     }
     throw new Error(`${what} must be a JSON object`);
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = (error as any)?.message ?? String(error);
     throw new Error(`${what} invalid: ${message}`);
   }
 }
@@ -43,10 +43,8 @@ function buildRequestParts(payloadText: string, headersText: string): RequestPar
 }
 
 export default function Command() {
-  const prefs = getPreferenceValues<Preferences>();
   const [urlOrPath, setUrlOrPath] = useState("");
   const [payload, setPayload] = useState("");
-  // defaultUseTestUrl が true でも、要件により prod(/webhook) を既定化
   const [useTest, setUseTest] = useState<boolean>(false);
   const [headers, setHeaders] = useState<string>("");
   const { push } = useNavigation();
@@ -61,7 +59,7 @@ export default function Command() {
     try {
       parts = buildRequestParts(payload, headers);
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = (error as any)?.message ?? String(error);
       await showToast({ style: Toast.Style.Failure, title: "Invalid input", message });
       return;
     }
@@ -80,7 +78,7 @@ export default function Command() {
         await saveHistoryItem({ url, mode: useTest ? "test" : "prod", payload: parts.body, headers, status: res.status, at: Date.now() });
       }
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = (error as any)?.message ?? String(error);
       await showToast({ style: Toast.Style.Failure, title: "Request error", message });
     }
   };
