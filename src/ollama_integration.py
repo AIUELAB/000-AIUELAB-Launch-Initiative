@@ -3,7 +3,8 @@ Ollama Integration for Claude Code Template
 完全無料のローカルLLM統合
 """
 
-from typing import Any, Iterator, cast
+from collections.abc import Iterator
+from typing import Any, cast
 
 import ollama
 from langchain_ollama import ChatOllama, OllamaLLM

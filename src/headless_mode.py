@@ -510,7 +510,7 @@ class HeadlessExecutor:
         self, tasks: list[TaskType], params: dict | None = None, files: list[str] | None = None
     ) -> list[TaskResult]:
         """Execute multiple tasks in sequence or parallel"""
-        results = []
+        results: list[TaskResult] = []
 
         if self.parallel and self.executor:
             # Run tasks in parallel
@@ -527,7 +527,7 @@ class HeadlessExecutor:
                 results.append(result)
 
                 # Stop on failure if requested
-                if result.status == "failure" and not params.get("continue_on_error"):
+                if result.status == "failure" and not (params or {}).get("continue_on_error"):
                     break
 
         return results
@@ -587,8 +587,8 @@ class HeadlessExecutor:
             console = Console()
             with console.capture() as capture:
                 console.print(table)
-
-            return capture.get()
+            captured = capture.get()
+            return str(captured)
 
     def cleanup(self):
         """Cleanup resources"""
