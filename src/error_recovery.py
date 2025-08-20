@@ -8,20 +8,20 @@ import functools
 import sys
 import time
 import traceback
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, TypeVar
+from typing import TypeVar
 
 from loguru import logger
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
-
 from session_manager import get_session_manager
 
 console = Console()
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class ErrorRecovery:
@@ -64,7 +64,7 @@ class ErrorRecovery:
         self.session_manager.set("errors", errors[-100:])  # 最新100件を保持
 
         # ファイルに記録
-        with open(self.error_log_file, 'a', encoding='utf-8') as f:
+        with open(self.error_log_file, "a", encoding="utf-8") as f:
             f.write(f"\n{'='*60}\n")
             f.write(f"Timestamp: {timestamp}\n")
             f.write(f"Context: {context}\n")
@@ -83,17 +83,17 @@ class ErrorRecovery:
             show_traceback: トレースバックを表示するか
         """
         error_text = Text()
-        error_text.append(f"⚠️  Error: ", style="bold red")
+        error_text.append("⚠️  Error: ", style="bold red")
         error_text.append(f"{type(error).__name__}\n", style="red")
-        error_text.append(f"Message: ", style="bold")
-        error_text.append(f"{str(error)}\n")
+        error_text.append("Message: ", style="bold")
+        error_text.append(f"{error!s}\n")
 
         if context:
-            error_text.append(f"Context: ", style="bold")
+            error_text.append("Context: ", style="bold")
             error_text.append(f"{context}\n")
 
         if show_traceback:
-            error_text.append(f"\nTraceback:\n", style="bold")
+            error_text.append("\nTraceback:\n", style="bold")
             error_text.append(traceback.format_exc(), style="dim")
 
         panel = Panel(
@@ -104,9 +104,7 @@ class ErrorRecovery:
         )
         console.print(panel)
 
-    def recover_from_error(
-        self, error: Exception, recovery_action: Optional[Callable] = None
-    ) -> bool:
+    def recover_from_error(self, error: Exception, recovery_action: Callable | None = None) -> bool:
         """
         エラーから復旧を試みる
 
@@ -178,7 +176,7 @@ def with_retry(max_retries: int = 3, delay: int = 1, backoff: float = 2.0):
     return decorator
 
 
-def safe_execute(func: Callable[..., T], *args, **kwargs) -> Optional[T]:
+def safe_execute(func: Callable[..., T], *args, **kwargs) -> T | None:
     """
     安全に関数を実行
 
@@ -208,7 +206,7 @@ class ErrorHandler:
         context: str = "",
         suppress: bool = False,
         show_traceback: bool = False,
-        recovery_action: Optional[Callable] = None,
+        recovery_action: Callable | None = None,
     ):
         """
         エラーハンドラーの初期化
@@ -278,7 +276,7 @@ RECOVERY_ACTIONS = {
 }
 
 
-def get_recovery_action(error: Exception) -> Optional[Callable]:
+def get_recovery_action(error: Exception) -> Callable | None:
     """
     エラータイプに応じた復旧アクションを取得
 
@@ -303,9 +301,9 @@ def error_handler(context: str = "", suppress: bool = False, show_traceback: boo
         show_traceback: トレースバックを表示するか
     """
 
-    def decorator(func: Callable[..., T]) -> Callable[..., Optional[T]]:
+    def decorator(func: Callable[..., T]) -> Callable[..., T | None]:
         @functools.wraps(func)
-        def wrapper(*args, **kwargs) -> Optional[T]:
+        def wrapper(*args, **kwargs) -> T | None:
             with ErrorHandler(
                 context=context or func.__name__, suppress=suppress, show_traceback=show_traceback
             ):

@@ -1,157 +1,157 @@
 rules:
-  # Security Rules
-  - id: hardcoded-secrets
-    pattern-either:
-      - pattern: api_key = "..."
-      - pattern: secret = "..."
-      - pattern: password = "..."
-      - pattern: token = "..."
-    message: "Potential hardcoded secret found"
-    languages: [python]
-    severity: ERROR
+    # Security Rules
+    - id: hardcoded-secrets
+      pattern-either:
+          - pattern: api_key = "..."
+          - pattern: secret = "..."
+          - pattern: password = "..."
+          - pattern: token = "..."
+      message: "Potential hardcoded secret found"
+      languages: [python]
+      severity: ERROR
 
-  - id: sql-injection
-    patterns:
-      - pattern-either:
+    - id: sql-injection
+      patterns:
+          - pattern-either:
+                - pattern: |
+                      $QUERY = "..." + $INPUT + "..."
+                      $CURSOR.execute($QUERY)
+                - pattern: |
+                      $QUERY = f"...{$INPUT}..."
+                      $CURSOR.execute($QUERY)
+      message: "Potential SQL injection vulnerability"
+      languages: [python]
+      severity: ERROR
+
+    - id: command-injection
+      patterns:
+          - pattern-either:
+                - pattern: os.system(...)
+                - pattern: subprocess.call(..., shell=True)
+                - pattern: subprocess.run(..., shell=True)
+      message: "Potential command injection vulnerability"
+      languages: [python]
+      severity: WARNING
+
+    - id: insecure-deserialization
+      patterns:
+          - pattern-either:
+                - pattern: pickle.loads(...)
+                - pattern: yaml.load(..., Loader=yaml.Loader)
+                - pattern: eval(...)
+      message: "Insecure deserialization detected"
+      languages: [python]
+      severity: ERROR
+
+    # Code Quality Rules
+    - id: unused-import
+      pattern: |
+          import $X
+      message: "Check for unused import"
+      languages: [python]
+      severity: INFO
+
+    - id: debug-print
+      patterns:
+          - pattern-either:
+                - pattern: print(...)
+                - pattern: pprint(...)
+      message: "Debug print statement found"
+      languages: [python]
+      severity: INFO
+      paths:
+          exclude:
+              - "tests/*"
+              - "scripts/*"
+
+    - id: bare-except
+      pattern: |
+          try:
+            ...
+          except:
+            ...
+      message: "Bare except clause - consider catching specific exceptions"
+      languages: [python]
+      severity: WARNING
+
+    # MCP Specific Rules
+    - id: mcp-api-key-exposure
+      patterns:
+          - pattern-either:
+                - pattern: |
+                      $MCP_KEY = "$KEY"
+                - pattern: |
+                      os.environ["$MCP_KEY"] = "$KEY"
+          - metavariable-regex:
+                metavariable: $MCP_KEY
+                regex: ".*(API_KEY|TOKEN|SECRET).*"
+      message: "MCP API key might be exposed"
+      languages: [python]
+      severity: ERROR
+
+    - id: async-without-await
+      patterns:
           - pattern: |
-              $QUERY = "..." + $INPUT + "..."
-              $CURSOR.execute($QUERY)
+                async def $FUNC(...):
+                  ...
+          - pattern-not: |
+                async def $FUNC(...):
+                  ...
+                  await ...
+                  ...
+      message: "Async function without await"
+      languages: [python]
+      severity: WARNING
+
+    # Performance Rules
+    - id: inefficient-list-comprehension
+      patterns:
           - pattern: |
-              $QUERY = f"...{$INPUT}..."
-              $CURSOR.execute($QUERY)
-    message: "Potential SQL injection vulnerability"
-    languages: [python]
-    severity: ERROR
+                [... for ... in ... if ...]
+          - pattern-inside: |
+                $RESULT = [... for ... in ... if ...]
+                if len($RESULT) > 0:
+                  ...
+      message: "Consider using generator expression for memory efficiency"
+      languages: [python]
+      severity: INFO
 
-  - id: command-injection
-    patterns:
-      - pattern-either:
-          - pattern: os.system(...)
-          - pattern: subprocess.call(..., shell=True)
-          - pattern: subprocess.run(..., shell=True)
-    message: "Potential command injection vulnerability"
-    languages: [python]
-    severity: WARNING
-
-  - id: insecure-deserialization
-    patterns:
-      - pattern-either:
-          - pattern: pickle.loads(...)
-          - pattern: yaml.load(..., Loader=yaml.Loader)
-          - pattern: eval(...)
-    message: "Insecure deserialization detected"
-    languages: [python]
-    severity: ERROR
-
-  # Code Quality Rules
-  - id: unused-import
-    pattern: |
-      import $X
-    message: "Check for unused import"
-    languages: [python]
-    severity: INFO
-
-  - id: debug-print
-    patterns:
-      - pattern-either:
-          - pattern: print(...)
-          - pattern: pprint(...)
-    message: "Debug print statement found"
-    languages: [python]
-    severity: INFO
-    paths:
-      exclude:
-        - "tests/*"
-        - "scripts/*"
-
-  - id: bare-except
-    pattern: |
-      try:
-        ...
-      except:
-        ...
-    message: "Bare except clause - consider catching specific exceptions"
-    languages: [python]
-    severity: WARNING
-
-  # MCP Specific Rules
-  - id: mcp-api-key-exposure
-    patterns:
-      - pattern-either:
+    # Type Safety Rules
+    - id: missing-type-hints
+      patterns:
           - pattern: |
-              $MCP_KEY = "$KEY"
+                def $FUNC($ARGS):
+                  ...
+          - pattern-not: |
+                def $FUNC($ARGS) -> ...:
+                  ...
+      message: "Function missing return type hint"
+      languages: [python]
+      severity: INFO
+      paths:
+          exclude:
+              - "tests/*"
+
+    # Custom Project Rules
+    - id: beartype-missing
+      patterns:
           - pattern: |
-              os.environ["$MCP_KEY"] = "$KEY"
-      - metavariable-regex:
-          metavariable: $MCP_KEY
-          regex: '.*(API_KEY|TOKEN|SECRET).*'
-    message: "MCP API key might be exposed"
-    languages: [python]
-    severity: ERROR
-
-  - id: async-without-await
-    patterns:
-      - pattern: |
-          async def $FUNC(...):
-            ...
-      - pattern-not: |
-          async def $FUNC(...):
-            ...
-            await ...
-            ...
-    message: "Async function without await"
-    languages: [python]
-    severity: WARNING
-
-  # Performance Rules
-  - id: inefficient-list-comprehension
-    patterns:
-      - pattern: |
-          [... for ... in ... if ...]
-      - pattern-inside: |
-          $RESULT = [... for ... in ... if ...]
-          if len($RESULT) > 0:
-            ...
-    message: "Consider using generator expression for memory efficiency"
-    languages: [python]
-    severity: INFO
-
-  # Type Safety Rules
-  - id: missing-type-hints
-    patterns:
-      - pattern: |
-          def $FUNC($ARGS):
-            ...
-      - pattern-not: |
-          def $FUNC($ARGS) -> ...:
-            ...
-    message: "Function missing return type hint"
-    languages: [python]
-    severity: INFO
-    paths:
-      exclude:
-        - "tests/*"
-
-  # Custom Project Rules
-  - id: beartype-missing
-    patterns:
-      - pattern: |
-          def $FUNC(...):
-            ...
-      - pattern-not: |
-          @beartype
-          def $FUNC(...):
-            ...
-      - pattern-not: |
-          @$DECORATOR
-          @beartype
-          def $FUNC(...):
-            ...
-    message: "Consider adding @beartype decorator for runtime type checking"
-    languages: [python]
-    severity: INFO
-    paths:
-      include:
-        - "src/*"
-      exclude:
-        - "tests/*"
+                def $FUNC(...):
+                  ...
+          - pattern-not: |
+                @beartype
+                def $FUNC(...):
+                  ...
+          - pattern-not: |
+                @$DECORATOR
+                @beartype
+                def $FUNC(...):
+                  ...
+      message: "Consider adding @beartype decorator for runtime type checking"
+      languages: [python]
+      severity: INFO
+      paths:
+          include:
+              - "src/*"
+          exclude:
+              - "tests/*"

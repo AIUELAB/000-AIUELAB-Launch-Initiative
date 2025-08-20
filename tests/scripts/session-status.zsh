@@ -77,7 +77,7 @@ session_approach() {
 mcp_status() {
 	echo "🔍 MCP Server Status Check"
 	echo "========================="
-	
+
 	# Check if MCP servers are configured
 	local mcp_config="${CC_REPO_ROOT}/mcp-config/claude_desktop_config.json"
 	if [ -f "$mcp_config" ]; then
@@ -85,7 +85,7 @@ mcp_status() {
 	else
 		echo "❌ MCP設定ファイル: 不明"
 	fi
-	
+
 	# Check GitHub MCP
 	local github_mcp="${CC_REPO_ROOT}/bin/github-mcp"
 	if [ -f "$github_mcp" ]; then
@@ -93,11 +93,11 @@ mcp_status() {
 	else
 		echo "❌ GitHub MCP: 未インストール"
 	fi
-	
+
 	# Check Node.js MCP servers
 	echo -e "\n📦 MCPサーバー (npm global):"
 	npm list -g --depth=0 2>/dev/null | grep -E "@modelcontextprotocol|@mcp" || echo "  なし"
-	
+
 	# Check environment variables
 	echo -e "\n🔑 環境変数:"
 	[ -n "${GITHUB_PAT-}" ] && echo "  ✅ GITHUB_PAT: 設定済み" || echo "  ⚠️  GITHUB_PAT: 未設定"
@@ -109,16 +109,16 @@ mcp_status() {
 project_status() {
 	echo "📊 Project Status"
 	echo "================"
-	
+
 	# Python environment
 	echo -e "\n🐍 Python環境:"
 	python --version 2>&1 | head -1
 	echo "  仮想環境: ${VIRTUAL_ENV:-未アクティブ}"
-	
+
 	# Git status
 	echo -e "\n📝 Git状態:"
 	git status --short 2>/dev/null | head -5 || echo "  Gitリポジトリではありません"
-	
+
 	# Test coverage
 	if [ -f "${CC_REPO_ROOT}/.coverage" ]; then
 		echo -e "\n✅ テストカバレッジ:"
@@ -253,5 +253,3 @@ fi
 
 # Quiet
 :
-
-

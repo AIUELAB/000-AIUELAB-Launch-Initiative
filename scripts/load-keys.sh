@@ -80,15 +80,15 @@ done
 # 自動モードの場合
 if [ "$AUTO_MODE" = true ]; then
     log_info "自動モードで実行します"
-    
+
     # デフォルトの出力先
     if [ -z "$OUTPUT_PATH" ]; then
         OUTPUT_PATH="$PROJECT_ROOT/.env.mcp"
     fi
-    
+
     # Pythonスクリプトを自動実行
     echo "1" | python3 "$SCRIPT_DIR/load_keys.py" > /dev/null 2>&1
-    
+
     if [ $? -eq 0 ]; then
         log_success ".env.mcpファイルを生成しました: $OUTPUT_PATH"
     else

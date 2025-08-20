@@ -87,7 +87,6 @@ paths = [
     '''.git''',
     '''README.md''',
     '''docs''',
-    '''*.md''',
 ]
 regexes = [
     '''(test|dummy|fake|example|sample)[_\-]?(api)?[_\-]?key''',

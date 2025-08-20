@@ -1,114 +1,113 @@
 version: 2
 updates:
-  # Python dependencies
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-      timezone: "Asia/Tokyo"
-    open-pull-requests-limit: 10
-    reviewers:
-      - "security-team"
-    labels:
-      - "dependencies"
-      - "python"
-    commit-message:
-      prefix: "chore"
-      prefix-development: "chore"
-      include: "scope"
-    groups:
-      python-dev:
-        patterns:
-          - "pytest*"
-          - "mypy*"
-          - "ruff*"
-          - "black*"
-      python-security:
-        patterns:
-          - "bandit*"
-          - "safety*"
-          - "pip-audit*"
-    ignore:
-      # 特定のバージョンで問題がある場合
-      # - dependency-name: "package-name"
-      #   versions: ["1.x", "2.x"]
-    
-  # JavaScript/npm dependencies
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-      timezone: "Asia/Tokyo"
-    open-pull-requests-limit: 10
-    reviewers:
-      - "frontend-team"
-    labels:
-      - "dependencies"
-      - "javascript"
-    commit-message:
-      prefix: "chore"
-      prefix-development: "chore"
-      include: "scope"
-    groups:
-      npm-dev:
-        patterns:
-          - "@types/*"
-          - "eslint*"
-          - "prettier*"
-      npm-security:
-        patterns:
-          - "snyk*"
-    versioning-strategy: "increase"
-    
-  # GitHub Actions
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-      timezone: "Asia/Tokyo"
-    open-pull-requests-limit: 5
-    reviewers:
-      - "devops-team"
-    labels:
-      - "dependencies"
-      - "github-actions"
-    commit-message:
-      prefix: "ci"
-      include: "scope"
-    
-  # Docker
-  - package-ecosystem: "docker"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-      timezone: "Asia/Tokyo"
-    open-pull-requests-limit: 5
-    reviewers:
-      - "devops-team"
-    labels:
-      - "dependencies"
-      - "docker"
-    commit-message:
-      prefix: "build"
-      include: "scope"
+    # Python dependencies
+    - package-ecosystem: "pip"
+      directory: "/"
+      schedule:
+          interval: "weekly"
+          day: "monday"
+          time: "09:00"
+          timezone: "Asia/Tokyo"
+      open-pull-requests-limit: 10
+      reviewers:
+          - "security-team"
+      labels:
+          - "dependencies"
+          - "python"
+      commit-message:
+          prefix: "chore"
+          prefix-development: "chore"
+          include: "scope"
+      groups:
+          python-dev:
+              patterns:
+                  - "pytest*"
+                  - "mypy*"
+                  - "ruff*"
+                  - "black*"
+          python-security:
+              patterns:
+                  - "bandit*"
+                  - "safety*"
+                  - "pip-audit*"
+      ignore:
+          # 特定のバージョンで問題がある場合
+          # - dependency-name: "package-name"
+          #   versions: ["1.x", "2.x"]
+
+    # JavaScript/npm dependencies
+    - package-ecosystem: "npm"
+      directory: "/"
+      schedule:
+          interval: "weekly"
+          day: "monday"
+          time: "09:00"
+          timezone: "Asia/Tokyo"
+      open-pull-requests-limit: 10
+      reviewers:
+          - "frontend-team"
+      labels:
+          - "dependencies"
+          - "javascript"
+      commit-message:
+          prefix: "chore"
+          prefix-development: "chore"
+          include: "scope"
+      groups:
+          npm-dev:
+              patterns:
+                  - "@types/*"
+                  - "eslint*"
+                  - "prettier*"
+          npm-security:
+              patterns:
+                  - "snyk*"
+      versioning-strategy: "increase"
+
+    # GitHub Actions
+    - package-ecosystem: "github-actions"
+      directory: "/"
+      schedule:
+          interval: "weekly"
+          day: "monday"
+          time: "09:00"
+          timezone: "Asia/Tokyo"
+      open-pull-requests-limit: 5
+      reviewers:
+          - "devops-team"
+      labels:
+          - "dependencies"
+          - "github-actions"
+      commit-message:
+          prefix: "ci"
+          include: "scope"
+
+    # Docker
+    - package-ecosystem: "docker"
+      directory: "/"
+      schedule:
+          interval: "weekly"
+          day: "monday"
+          time: "09:00"
+          timezone: "Asia/Tokyo"
+      open-pull-requests-limit: 5
+      reviewers:
+          - "devops-team"
+      labels:
+          - "dependencies"
+          - "docker"
+      commit-message:
+          prefix: "build"
+          include: "scope"
 
 # Security updates configuration
 # These get created immediately regardless of schedule
 registries:
-  # Example for private registry
-  # npm-private:
-  #   type: npm-registry
-  #   url: https://npm.pkg.github.com
-  #   token: ${{secrets.GITHUB_TOKEN}}
-
+    # Example for private registry
+    # npm-private:
+    #   type: npm-registry
+    #   url: https://npm.pkg.github.com
+    #   token: ${{secrets.GITHUB_TOKEN}}
 # Allow specific dependencies only
 # allow:
 #   - dependency-type: "direct"

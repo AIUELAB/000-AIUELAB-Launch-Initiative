@@ -1,242 +1,223 @@
 {
-  "name": "hybrid",
-  "description": "Hybrid configuration combining local and remote MCP servers for maximum flexibility",
-  "mcpServers": {
-    "// Local High-Performance Servers": "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-    
-    "serena": {
-      "command": "uvx",
-      "args": [
-        "--from",
-        "git+https://github.com/oraios/serena",
-        "serena-mcp-server",
-        "--project",
-        "/Users/admin/Documents/Cursor/claude-code-template-mcp"
-      ],
-      "env": {},
-      "description": "Local code intelligence with LSP"
-    },
-    
-    "filesystem": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-filesystem",
-        "/Users/admin/Documents"
-      ],
-      "env": {},
-      "description": "Local file system access"
-    },
-    
-    "playwright": {
-      "command": "npx",
-      "args": [
-        "@playwright/mcp@latest"
-      ],
-      "env": {},
-      "description": "Local browser automation"
-    },
-    
-    "// Remote Cloud Services": "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-    
-    "linear-remote": {
-      "transport": "sse",
-      "url": "https://mcp.linear.app/sse",
-      "headers": {
-        "Authorization": "Bearer ${LINEAR_API_KEY}"
-      },
-      "description": "Linear issue tracking (remote)"
-    },
-    
-    "notion-remote": {
-      "transport": "http",
-      "url": "https://api.notion.com/v1/mcp",
-      "oauth": {
-        "clientId": "${NOTION_CLIENT_ID}",
-        "clientSecret": "${NOTION_CLIENT_SECRET}",
-        "scope": "read_content write_content"
-      },
-      "headers": {
-        "Notion-Version": "2022-06-28"
-      },
-      "description": "Notion workspace (remote)"
-    },
-    
-    "sentry-remote": {
-      "transport": "sse",
-      "url": "https://sentry.io/api/mcp/sse",
-      "headers": {
-        "Authorization": "Bearer ${SENTRY_AUTH_TOKEN}"
-      },
-      "description": "Sentry monitoring (remote)"
-    },
-    
-    "// Hybrid Servers with Fallback": "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-    
-    "github-hybrid": {
-      "primary": {
-        "command": "npx",
-        "args": [
-          "-y",
-          "@modelcontextprotocol/server-github"
-        ],
-        "env": {
-          "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+    "name": "hybrid",
+    "description": "Hybrid configuration combining local and remote MCP servers for maximum flexibility",
+    "mcpServers": {
+        "// Local High-Performance Servers": "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+
+        "serena": {
+            "command": "uvx",
+            "args": [
+                "--from",
+                "git+https://github.com/oraios/serena",
+                "serena-mcp-server",
+                "--project",
+                "/Users/admin/Documents/Cursor/claude-code-template-mcp"
+            ],
+            "env": {},
+            "description": "Local code intelligence with LSP"
+        },
+
+        "filesystem": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-filesystem",
+                "/Users/admin/Documents"
+            ],
+            "env": {},
+            "description": "Local file system access"
+        },
+
+        "playwright": {
+            "command": "npx",
+            "args": ["@playwright/mcp@latest"],
+            "env": {},
+            "description": "Local browser automation"
+        },
+
+        "// Remote Cloud Services": "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+
+        "linear-remote": {
+            "transport": "sse",
+            "url": "https://mcp.linear.app/sse",
+            "headers": {
+                "Authorization": "Bearer ${LINEAR_API_KEY}"
+            },
+            "description": "Linear issue tracking (remote)"
+        },
+
+        "notion-remote": {
+            "transport": "http",
+            "url": "https://api.notion.com/v1/mcp",
+            "oauth": {
+                "clientId": "${NOTION_CLIENT_ID}",
+                "clientSecret": "${NOTION_CLIENT_SECRET}",
+                "scope": "read_content write_content"
+            },
+            "headers": {
+                "Notion-Version": "2022-06-28"
+            },
+            "description": "Notion workspace (remote)"
+        },
+
+        "sentry-remote": {
+            "transport": "sse",
+            "url": "https://sentry.io/api/mcp/sse",
+            "headers": {
+                "Authorization": "Bearer ${SENTRY_AUTH_TOKEN}"
+            },
+            "description": "Sentry monitoring (remote)"
+        },
+
+        "// Hybrid Servers with Fallback": "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+
+        "github-hybrid": {
+            "primary": {
+                "command": "npx",
+                "args": ["-y", "@modelcontextprotocol/server-github"],
+                "env": {
+                    "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+                }
+            },
+            "fallback": {
+                "transport": "sse",
+                "url": "https://api.github.com/mcp/sse",
+                "headers": {
+                    "Authorization": "token ${GITHUB_TOKEN}"
+                }
+            },
+            "strategy": "prefer-local",
+            "description": "GitHub with remote fallback"
+        },
+
+        "brave-hybrid": {
+            "primary": {
+                "command": "npx",
+                "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+                "env": {
+                    "BRAVE_API_KEY": "${BRAVE_API_KEY}"
+                }
+            },
+            "fallback": {
+                "transport": "http",
+                "url": "https://api.search.brave.com/mcp",
+                "headers": {
+                    "X-Subscription-Token": "${BRAVE_API_KEY}"
+                }
+            },
+            "strategy": "load-balance",
+            "description": "Brave search with load balancing"
+        },
+
+        "firecrawl-hybrid": {
+            "primary": {
+                "command": "uvx",
+                "args": ["firecrawl-mcp-server"],
+                "env": {
+                    "FIRECRAWL_API_KEY": "${FIRECRAWL_API_KEY}"
+                }
+            },
+            "fallback": {
+                "transport": "sse",
+                "url": "https://api.firecrawl.dev/mcp/sse",
+                "headers": {
+                    "Authorization": "Bearer ${FIRECRAWL_API_KEY}"
+                }
+            },
+            "strategy": "prefer-remote",
+            "description": "Firecrawl preferring cloud"
+        },
+
+        "// Local-Only Critical Services": "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+
+        "memory": {
+            "command": "npx",
+            "args": ["-y", "@modelcontextprotocol/server-memory"],
+            "env": {},
+            "description": "Local memory storage"
+        },
+
+        "sequential-thinking": {
+            "command": "npx",
+            "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+            "env": {},
+            "description": "Local reasoning engine"
+        },
+
+        "docker": {
+            "command": "npx",
+            "args": ["-y", "@modelcontextprotocol/server-docker"],
+            "env": {},
+            "description": "Local Docker management"
         }
-      },
-      "fallback": {
-        "transport": "sse",
-        "url": "https://api.github.com/mcp/sse",
-        "headers": {
-          "Authorization": "token ${GITHUB_TOKEN}"
+    },
+
+    "fallbackStrategies": {
+        "prefer-local": {
+            "description": "Use local server first, fallback to remote on failure",
+            "timeout": 5000,
+            "retryLocal": 2
+        },
+        "prefer-remote": {
+            "description": "Use remote server first, fallback to local if unavailable",
+            "timeout": 10000,
+            "retryRemote": 3
+        },
+        "load-balance": {
+            "description": "Distribute requests between local and remote",
+            "algorithm": "round-robin",
+            "healthCheckInterval": 30000
+        },
+        "fastest-response": {
+            "description": "Race both servers, use whichever responds first",
+            "maxLatencyDiff": 100
         }
-      },
-      "strategy": "prefer-local",
-      "description": "GitHub with remote fallback"
     },
-    
-    "brave-hybrid": {
-      "primary": {
-        "command": "npx",
-        "args": [
-          "-y",
-          "@modelcontextprotocol/server-brave-search"
-        ],
-        "env": {
-          "BRAVE_API_KEY": "${BRAVE_API_KEY}"
-        }
-      },
-      "fallback": {
-        "transport": "http",
-        "url": "https://api.search.brave.com/mcp",
-        "headers": {
-          "X-Subscription-Token": "${BRAVE_API_KEY}"
-        }
-      },
-      "strategy": "load-balance",
-      "description": "Brave search with load balancing"
+
+    "settings": {
+        "enableFallback": true,
+        "fallbackTimeout": 5000,
+        "maxConcurrentServers": 15,
+        "localServerPriority": 0.6,
+        "remoteServerPriority": 0.4,
+        "enableHealthChecks": true,
+        "healthCheckInterval": 60000
     },
-    
-    "firecrawl-hybrid": {
-      "primary": {
-        "command": "uvx",
-        "args": [
-          "firecrawl-mcp-server"
-        ],
-        "env": {
-          "FIRECRAWL_API_KEY": "${FIRECRAWL_API_KEY}"
-        }
-      },
-      "fallback": {
-        "transport": "sse",
-        "url": "https://api.firecrawl.dev/mcp/sse",
-        "headers": {
-          "Authorization": "Bearer ${FIRECRAWL_API_KEY}"
-        }
-      },
-      "strategy": "prefer-remote",
-      "description": "Firecrawl preferring cloud"
+
+    "circuitBreaker": {
+        "enabled": true,
+        "failureThreshold": 5,
+        "resetTimeout": 60000,
+        "halfOpenRequests": 3
     },
-    
-    "// Local-Only Critical Services": "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-    
-    "memory": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-memory"
-      ],
-      "env": {},
-      "description": "Local memory storage"
+
+    "monitoring": {
+        "enableMetrics": true,
+        "metricsEndpoint": "http://localhost:9090/metrics",
+        "logLevel": "info",
+        "logFailures": true,
+        "alertOnMultipleFailures": true
     },
-    
-    "sequential-thinking": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-sequential-thinking"
-      ],
-      "env": {},
-      "description": "Local reasoning engine"
-    },
-    
-    "docker": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-docker"
-      ],
-      "env": {},
-      "description": "Local Docker management"
-    }
-  },
-  
-  "fallbackStrategies": {
-    "prefer-local": {
-      "description": "Use local server first, fallback to remote on failure",
-      "timeout": 5000,
-      "retryLocal": 2
-    },
-    "prefer-remote": {
-      "description": "Use remote server first, fallback to local if unavailable",
-      "timeout": 10000,
-      "retryRemote": 3
-    },
-    "load-balance": {
-      "description": "Distribute requests between local and remote",
-      "algorithm": "round-robin",
-      "healthCheckInterval": 30000
-    },
-    "fastest-response": {
-      "description": "Race both servers, use whichever responds first",
-      "maxLatencyDiff": 100
-    }
-  },
-  
-  "settings": {
-    "enableFallback": true,
-    "fallbackTimeout": 5000,
-    "maxConcurrentServers": 15,
-    "localServerPriority": 0.6,
-    "remoteServerPriority": 0.4,
-    "enableHealthChecks": true,
-    "healthCheckInterval": 60000
-  },
-  
-  "circuitBreaker": {
-    "enabled": true,
-    "failureThreshold": 5,
-    "resetTimeout": 60000,
-    "halfOpenRequests": 3
-  },
-  
-  "monitoring": {
-    "enableMetrics": true,
-    "metricsEndpoint": "http://localhost:9090/metrics",
-    "logLevel": "info",
-    "logFailures": true,
-    "alertOnMultipleFailures": true
-  },
-  
-  "advantages": [
-    "Best of both worlds - local speed and cloud reliability",
-    "Automatic fallback on failures",
-    "Load distribution capabilities",
-    "Works offline for local servers",
-    "Cloud services for collaboration features"
-  ],
-  
-  "use_cases": [
-    "Development teams needing both local tools and cloud services",
-    "Projects requiring high availability",
-    "Mixed online/offline workflows",
-    "Performance-critical applications with cloud backup"
-  ],
-  
-  "requirements": [
-    "Local MCP servers installed",
-    "API keys for remote services",
-    "Sufficient system resources for local servers",
-    "Intermittent internet connection acceptable"
-  ]
+
+    "advantages": [
+        "Best of both worlds - local speed and cloud reliability",
+        "Automatic fallback on failures",
+        "Load distribution capabilities",
+        "Works offline for local servers",
+        "Cloud services for collaboration features"
+    ],
+
+    "use_cases": [
+        "Development teams needing both local tools and cloud services",
+        "Projects requiring high availability",
+        "Mixed online/offline workflows",
+        "Performance-critical applications with cloud backup"
+    ],
+
+    "requirements": [
+        "Local MCP servers installed",
+        "API keys for remote services",
+        "Sufficient system resources for local servers",
+        "Intermittent internet connection acceptable"
+    ]
 }

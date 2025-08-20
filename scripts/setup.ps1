@@ -4,7 +4,7 @@
 # Colors for output
 $colors = @{
     Red = "Red"
-    Green = "Green" 
+    Green = "Green"
     Yellow = "Yellow"
     Blue = "Blue"
     Cyan = "Cyan"
@@ -165,7 +165,7 @@ if (-not (Test-Path $gitPath)) {
     if ($response -eq "y" -or $response -eq "Y") {
         git init
         Write-Success "Git repository initialized"
-        
+
         $response = Read-Host "Create initial commit? (y/N)"
         if ($response -eq "y" -or $response -eq "Y") {
             git add .

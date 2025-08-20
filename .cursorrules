@@ -141,7 +141,7 @@ Before submitting code, ensure:
 ```python
 class Singleton:
     _instance = None
-    
+
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
@@ -154,7 +154,7 @@ def process_data(data: Any) -> Result:
     # Guard clause
     if not data:
         raise ValueError("Data cannot be empty")
-    
+
     try:
         # Process data
         result = transform(data)

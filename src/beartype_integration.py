@@ -17,7 +17,7 @@ Features:
 import asyncio
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Annotated, Generic, Literal, Optional, TypeVar, Union
+from typing import Annotated, Generic, Literal, TypeVar, Union
 
 from beartype import beartype
 from beartype.vale import Is
@@ -35,7 +35,7 @@ def calculate_average(numbers: list[float]) -> float:
 # Complex type annotations
 @beartype
 def process_config(
-    config: dict[str, Union[str, int, bool, None]], strict_mode: bool = False
+    config: dict[str, str | int | bool | None], strict_mode: bool = False
 ) -> dict[str, str]:
     """Process configuration with complex type checking."""
     result = {}
@@ -54,8 +54,8 @@ FilePath = Annotated[Path, Is[lambda x: x.exists()]]
 
 @beartype
 def create_user(
-    name: str, age: PositiveInt, email: EmailStr, config_file: Optional[FilePath] = None
-) -> dict[str, Union[str, int]]:
+    name: str, age: PositiveInt, email: EmailStr, config_file: FilePath | None = None
+) -> dict[str, str | int]:
     """Create user with custom type validators."""
     user = {"name": name, "age": age, "email": email}
 
@@ -75,7 +75,7 @@ class MCPServer:
     url: str
     port: PositiveInt
     protocol: Literal["http", "https", "ws", "wss"]
-    api_key: Optional[str] = None
+    api_key: str | None = None
     timeout: float = 30.0
     retry_count: int = 3
 
@@ -100,7 +100,7 @@ class Cache(Generic[T]):
         self.max_size = max_size
 
     @beartype
-    def get(self, key: str) -> Optional[T]:
+    def get(self, key: str) -> T | None:
         """Get item from cache."""
         return self._cache.get(key)
 
@@ -116,12 +116,10 @@ class Cache(Generic[T]):
 
 # Async support with beartype
 @beartype
-async def fetch_data(
-    urls: list[str], timeout: float = 10.0
-) -> list[Optional[dict[str, Union[str, int]]]]:
+async def fetch_data(urls: list[str], timeout: float = 10.0) -> list[dict[str, str | int] | None]:
     """Fetch data from multiple URLs with type checking."""
 
-    async def fetch_single(url: str) -> Optional[dict[str, Union[str, int]]]:
+    async def fetch_single(url: str) -> dict[str, str | int] | None:
         # Simulated async fetch
         await asyncio.sleep(0.1)
         return {"url": url, "status": 200, "data": "example"}
@@ -170,7 +168,7 @@ def validate_json(data: JSONValue) -> bool:
 
 # Custom error handling
 @beartype
-def divide_numbers(numerator: Union[int, float], denominator: Union[int, float]) -> float:
+def divide_numbers(numerator: int | float, denominator: int | float) -> float:
     """Divide with type checking and error handling."""
     if denominator == 0:
         raise ValueError("Division by zero")
@@ -182,7 +180,7 @@ def divide_numbers(numerator: Union[int, float], denominator: Union[int, float])
 class MCPClient:
     """Type-safe MCP client implementation."""
 
-    def __init__(self, server_name: NonEmptyStr, base_url: str, api_key: Optional[str] = None):
+    def __init__(self, server_name: NonEmptyStr, base_url: str, api_key: str | None = None):
         self.server_name = server_name
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
@@ -190,7 +188,7 @@ class MCPClient:
 
     @beartype
     async def execute_tool(
-        self, tool_name: NonEmptyStr, params: dict[str, Union[str, int, float, bool, None]]
+        self, tool_name: NonEmptyStr, params: dict[str, str | int | float | bool | None]
     ) -> dict[str, Any]:
         """Execute MCP tool with type-safe parameters."""
         # Check cache

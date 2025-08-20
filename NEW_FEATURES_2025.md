@@ -2,7 +2,7 @@
 
 ## ✨ 追加された機能
 
-### 5. リモートMCPサーバー対応 ✅ 
+### 5. リモートMCPサーバー対応 ✅
 **場所**: `mcp-config/remote-servers.json`, `REMOTE_MCP_SERVERS.md`
 
 **機能**:
@@ -181,7 +181,7 @@ docker-compose -f docker-compose.claude.yml run claude-yolo
 ✅ **クラウド対応**: リモートMCPサーバーでインフラ管理不要
 ✅ **認証**: OAuth 2.0によるセキュアな外部サービス連携
 
-**次のステップ**: 
+**次のステップ**:
 1. `ANTHROPIC_API_KEY`を設定
 2. Docker環境を構築
 3. GitHub Actionsを有効化

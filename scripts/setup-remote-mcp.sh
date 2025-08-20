@@ -31,7 +31,7 @@ update_env_var() {
     local key=$1
     local value=$2
     local env_file=$3
-    
+
     if grep -q "^${key}=" "$env_file"; then
         # Update existing variable
         if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -157,7 +157,7 @@ case $choice in
         configure_apidog
         configure_simplescraper
         ;;
-    0) 
+    0)
         echo -e "${YELLOW}Exiting...${NC}"
         exit 0
         ;;
@@ -174,15 +174,15 @@ test_remote_server() {
     local name=$1
     local url=$2
     local auth_header=$3
-    
+
     echo -n "Testing $name... "
-    
+
     if [ ! -z "$auth_header" ]; then
         response=$(curl -s -o /dev/null -w "%{http_code}" -H "$auth_header" "$url" 2>/dev/null || echo "000")
     else
         response=$(curl -s -o /dev/null -w "%{http_code}" "$url" 2>/dev/null || echo "000")
     fi
-    
+
     if [ "$response" = "200" ] || [ "$response" = "401" ] || [ "$response" = "403" ]; then
         echo -e "${GREEN}✓ Reachable${NC}"
     else
@@ -193,15 +193,15 @@ test_remote_server() {
 # Test configured servers
 if [ -f "$ENV_FILE" ]; then
     source "$ENV_FILE"
-    
+
     if [ ! -z "$LINEAR_API_KEY" ]; then
         test_remote_server "Linear" "https://api.linear.app/graphql" "Authorization: $LINEAR_API_KEY"
     fi
-    
+
     if [ ! -z "$NOTION_CLIENT_ID" ]; then
         test_remote_server "Notion" "https://api.notion.com/v1" ""
     fi
-    
+
     if [ ! -z "$SENTRY_AUTH_TOKEN" ]; then
         test_remote_server "Sentry" "https://sentry.io/api/0/" "Authorization: Bearer $SENTRY_AUTH_TOKEN"
     fi
@@ -221,20 +221,20 @@ read -p "Enable remote servers in Claude configuration? (y/n): " enable_remote
 if [ "$enable_remote" = "y" ]; then
     cp "$MCP_CONFIG_DIR/claude_desktop_config_remote.json" "$MCP_CONFIG_DIR/claude_desktop_config.json"
     echo -e "${GREEN}✓ Remote servers enabled${NC}"
-    
+
     # Add servers using Claude CLI
     echo -e "\n${YELLOW}Adding remote servers to Claude...${NC}"
-    
+
     if [ ! -z "$LINEAR_API_KEY" ]; then
         echo "Adding Linear server..."
         claude mcp add --transport sse linear https://mcp.linear.app/sse 2>/dev/null || true
     fi
-    
+
     if [ ! -z "$NOTION_CLIENT_ID" ]; then
         echo "Adding Notion server..."
         claude mcp add --transport http notion https://api.notion.com/v1/mcp 2>/dev/null || true
     fi
-    
+
     if [ ! -z "$SENTRY_AUTH_TOKEN" ]; then
         echo "Adding Sentry server..."
         claude mcp add --transport sse sentry https://sentry.io/api/mcp/sse 2>/dev/null || true
