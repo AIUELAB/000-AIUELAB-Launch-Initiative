@@ -194,7 +194,7 @@ class MCPClient:
         # Check cache
         cache_key = f"{tool_name}:{params!s}"
         cached = self._cache.get(cache_key)
-        if cached:
+        if cached is not None:
             return cached
 
         # Simulate tool execution
