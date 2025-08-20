@@ -169,6 +169,7 @@ class TaskCache:
 
 TESTS_DIR = "tests/"
 
+
 class HeadlessExecutor:
     """Enhanced headless execution engine"""
 
@@ -276,7 +277,7 @@ class HeadlessExecutor:
         for line in lines:
             p, f, s = self._parse_pytest_summary_line(line)
             if p is not None:
-                passed, failed, skipped = p, f, s
+                passed, failed, skipped = p or 0, f or 0, s or 0
                 break
 
         return {
@@ -298,7 +299,11 @@ class HeadlessExecutor:
             for i, token in enumerate(parts):
                 if token in {"passed", "failed", "skipped"} and i > 0 and parts[i - 1].isdigit():
                     count_map[token] = int(parts[i - 1])
-            return count_map.get("passed", 0), count_map.get("failed", 0), count_map.get("skipped", 0)
+            return (
+                count_map.get("passed", 0),
+                count_map.get("failed", 0),
+                count_map.get("skipped", 0),
+            )
         return None, None, None
 
     async def _run_lint(self, params: dict, files: list[str]) -> dict:
