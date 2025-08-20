@@ -37,7 +37,7 @@ class SessionManager:
         self.auto_save_thread: threading.Thread | None = None
         self.stop_auto_save = threading.Event()
 
-        # シグナルハンドラーの設定（クラッシュ対策）
+        # シグナルハンドラーの設定(クラッシュ対策)
         self._setup_signal_handlers()
 
         # 前回のセッションを復元
@@ -46,7 +46,7 @@ class SessionManager:
     def _setup_signal_handlers(self) -> None:
         """シグナルハンドラーの設定"""
 
-        def signal_handler(signum: int, frame: object | None) -> None:
+        def signal_handler(signum: int, _frame: object | None) -> None:
             logger.warning(f"Signal {signum} received, saving session...")
             self.save_session()
             sys.exit(0)
@@ -102,7 +102,7 @@ class SessionManager:
             with self.session_file.open("w", encoding="utf-8") as f:
                 json.dump(self.session_data, f, indent=2, ensure_ascii=False)
 
-            # バックアップを作成（自動保存以外の場合）
+            # バックアップを作成(自動保存以外の場合)
             if not is_auto_save:
                 backup_file = (
                     self.backup_dir / f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"

@@ -104,7 +104,7 @@ class ErrorRecovery:
         )
         console.print(panel)
 
-    def recover_from_error(self, error: Exception, recovery_action: Callable | None = None) -> bool:
+    def recover_from_error(self, _error: Exception, recovery_action: Callable | None = None) -> bool:
         """
         エラーから復旧を試みる
 
@@ -290,7 +290,7 @@ def get_recovery_action(error: Exception) -> Callable | None:
     return RECOVERY_ACTIONS.get(error_type)
 
 
-# デコレーター：エラーハンドリング付き関数
+# デコレーター: エラーハンドリング付き関数
 def error_handler(context: str = "", suppress: bool = False, show_traceback: bool = False):
     """
     エラーハンドリングデコレーター
