@@ -181,7 +181,12 @@ class RemoteMCPClient:
         async with aiohttp.ClientSession() as session:
             async with session.post(token_endpoint, data=data) as response:
                 if response.status != 200:
-                    raise Exception(f"OAuth token request failed: {response.status}")
+                    raise aiohttp.ClientResponseError(
+                        request_info=response.request_info,
+                        history=(),
+                        status=response.status,
+                        message="OAuth token request failed",
+                    )
 
                 token_data = await response.json()
 
@@ -245,7 +250,12 @@ class RemoteMCPClient:
         try:
             async with self.session.get(f"{self.config.url}/health") as response:
                 if response.status not in [200, 404]:
-                    raise Exception(f"Connection test failed: {response.status}")
+                    raise aiohttp.ClientResponseError(
+                        request_info=response.request_info,
+                        history=(),
+                        status=response.status,
+                        message="Connection test failed",
+                    )
         except aiohttp.ClientError as e:
             logger.warning(f"Health check failed for {self.config.name}: {e}")
             # Don't fail - server might not have health endpoint
@@ -285,7 +295,12 @@ class RemoteMCPClient:
                         continue
                     else:
                         error_text = await response.text()
-                        raise Exception(f"Request failed: {response.status} - {error_text}")
+                        raise aiohttp.ClientResponseError(
+                            request_info=response.request_info,
+                            history=(),
+                            status=response.status,
+                            message=f"Request failed: {error_text}",
+                        )
             except aiohttp.ClientError:
                 if attempt < self.config.retry_attempts - 1:
                     await asyncio.sleep(2**attempt)
@@ -299,7 +314,12 @@ class RemoteMCPClient:
             raise RuntimeError("Not connected")
         async with self.session.post(f"{self.config.url}/request", json=payload) as response:
             if response.status != 200:
-                raise Exception(f"SSE request failed: {response.status}")
+                raise aiohttp.ClientResponseError(
+                    request_info=response.request_info,
+                    history=(),
+                    status=response.status,
+                    message="SSE request failed",
+                )
 
             # Read SSE response
             async for line in response.content:
