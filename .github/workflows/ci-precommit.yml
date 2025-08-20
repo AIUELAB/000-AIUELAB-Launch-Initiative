@@ -2,9 +2,9 @@ name: pre-commit
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [main]
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   pre-commit:
@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: "3.13"
       - name: Install Python deps
         run: |
           python -m pip install --upgrade pip
@@ -21,7 +21,7 @@ jobs:
       - name: Install Node (for prettier etc.)
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
       - name: Install pre-commit
         run: |
           pip install pre-commit

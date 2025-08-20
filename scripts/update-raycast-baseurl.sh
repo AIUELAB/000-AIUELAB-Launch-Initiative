@@ -15,6 +15,8 @@ if [ -z "${NEW_BASE_URL}" ]; then
   exit 1
 fi
 
+echo "Target extension: ${EXTENSION_NAME}" >/dev/null
+
 # Raycast のアプリサポートディレクトリ（macOS）
 PREF_ROOT="$HOME/Library/Application Support/Raycast"
 
