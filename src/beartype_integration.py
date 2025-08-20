@@ -195,7 +195,8 @@ class MCPClient:
         cache_key = f"{tool_name}:{params!s}"
         cached = self._cache.get(cache_key)
         if cached is not None:
-            return cached
+            # Type assertion since we know cached value matches return type
+            return cached  # type: ignore[return-value]
 
         # Simulate tool execution
         result = {"tool": tool_name, "status": "success", "result": params}
