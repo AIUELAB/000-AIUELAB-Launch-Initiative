@@ -46,7 +46,8 @@ export default function Command() {
   const prefs = getPreferenceValues<Preferences>();
   const [urlOrPath, setUrlOrPath] = useState("");
   const [payload, setPayload] = useState("");
-  const [useTest, setUseTest] = useState<boolean>(Boolean(prefs.defaultUseTestUrl));
+  // defaultUseTestUrl が true でも、要件により prod(/webhook) を既定化
+  const [useTest, setUseTest] = useState<boolean>(false);
   const [headers, setHeaders] = useState<string>("");
   const { push } = useNavigation();
 
@@ -72,13 +73,11 @@ export default function Command() {
       const short = text.length > 5000 ? text.slice(0, 5000) + "\n…(truncated)" : text;
       if (res.ok) {
         await showHUD("✅ n8n triggered");
-        push(<Detail markdown={`**URL**: ${url}\n\n**Status**: ${res.status}\n\n\n\n
-\n**Response**:\n\n\n\n${'```'}\n${short}\n${'```'}`} />);
+        push(<Detail markdown={`**URL**: ${url}\n\n**Status**: ${res.status}\n\n\n\n\n**Response**:\n\n\n\n${"```"}\n${short}\n${"```"}`} />);
         await saveHistoryItem({ url, mode: useTest ? "test" : "prod", payload: parts.body, headers, status: res.status, at: Date.now() });
       } else {
         await showToast({ style: Toast.Style.Failure, title: `Failed: ${res.status}`, message: url });
-        push(<Detail markdown={`**URL**: ${url}\n\n**Status**: ${res.status}\n\n\n\n
-\n**Response**:\n\n\n\n${'```'}\n${short}\n${'```'}`} />);
+        push(<Detail markdown={`**URL**: ${url}\n\n**Status**: ${res.status}\n\n\n\n\n**Response**:\n\n\n\n${"```"}\n${short}\n${"```"}`} />);
         await saveHistoryItem({ url, mode: useTest ? "test" : "prod", payload: parts.body, headers, status: res.status, at: Date.now() });
       }
     } catch (error: unknown) {
@@ -91,7 +90,7 @@ export default function Command() {
     <Form
       actions={
         <ActionPanel>
-          <Action.SubmitForm title="Run Webhook" onSubmit={onSubmit} />
+          <Action.SubmitForm title="Run Webhook" onSubmit={onSubmit} shortcut={{ modifiers: ["cmd"], key: "enter" }} />
           <Action
             title="Use Production (/webhook)"
             onAction={() => setUseTest(false)}

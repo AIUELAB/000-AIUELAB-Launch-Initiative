@@ -57,6 +57,6 @@ export async function loadHistory(): Promise<HistoryItem[]> {
 
 export async function saveHistoryItem(item: HistoryItem): Promise<void> {
   const arr = await loadHistory();
-  const merged = [item, ...arr].slice(0, 30);
+  const merged = [item, ...arr].slice(0, 50);
   await LocalStorage.setItem(HISTORY_KEY, JSON.stringify(merged));
 }

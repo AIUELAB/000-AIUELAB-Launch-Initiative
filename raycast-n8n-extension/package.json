@@ -24,6 +24,19 @@
       "path": "src/run-webhook.tsx"
     },
     {
+      "name": "run-preset",
+      "title": "Run Preset Workflow",
+      "description": "Run predefined n8n webhook presets",
+      "mode": "view",
+      "keywords": [
+        "n8n",
+        "preset",
+        "webhook",
+        "workflow"
+      ],
+      "path": "src/run-preset.tsx"
+    },
+    {
       "name": "history",
       "title": "n8n Run History",
       "description": "View and re-run previous webhook executions",
