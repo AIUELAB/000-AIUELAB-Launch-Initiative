@@ -120,7 +120,7 @@ class TaskCache:
             return None
 
         try:
-            with open(cache_file, encoding="utf-8") as f:
+            with cache_file.open(encoding="utf-8") as f:
                 payload = json.load(f)
             # Parse timestamp and check expiry
             timestamp = datetime.fromisoformat(payload.get("timestamp"))
@@ -156,7 +156,7 @@ class TaskCache:
                 "result": result.to_dict(),
                 "timestamp": datetime.now().isoformat(),
             }
-            with open(cache_file, "w", encoding="utf-8") as f:
+            with cache_file.open("w", encoding="utf-8") as f:
                 json.dump(payload, f, ensure_ascii=False)
         except Exception as e:
             logger.warning(f"Failed to save cache: {e}")
