@@ -1,71 +1,71 @@
 version: "3.8"
 
 services:
-    claude-safe:
-        build:
-            context: .
-            dockerfile: Dockerfile.claude
-        image: claude-code-safe:latest
-        container_name: claude-code-safe
-        volumes:
-            # Mount current directory as workspace
-            - .:/workspace:rw
-            # Mount Docker socket for Docker-in-Docker (optional)
-            # - /var/run/docker.sock:/var/run/docker.sock:ro
-        environment:
-            # Pass through API keys
-            - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-            - CLAUDE_API_KEY=${CLAUDE_API_KEY}
-            - GITHUB_TOKEN=${GITHUB_TOKEN}
-            - BRAVE_API_KEY=${BRAVE_API_KEY}
-            - OPENAI_API_KEY=${OPENAI_API_KEY}
-            # Claude settings
-            - CLAUDE_HEADLESS=true
-            - CLAUDE_NO_TELEMETRY=true
-        working_dir: /workspace
-        user: claude
-        # Network isolation (no internet by default)
-        network_mode: none
-        # Resource limits
-        mem_limit: 4g
-        cpus: "2.0"
-        # Security options
-        security_opt:
-            - no-new-privileges:true
-        read_only: false
-        tmpfs:
-            - /tmp
-            - /home/claude/.cache
+  claude-safe:
+    build:
+      context: .
+      dockerfile: Dockerfile.claude
+    image: claude-code-safe:latest
+    container_name: claude-code-safe
+    volumes:
+      # Mount current directory as workspace
+      - .:/workspace:rw
+      # Mount Docker socket for Docker-in-Docker (optional)
+      # - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      # Pass through API keys
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - BRAVE_API_KEY=${BRAVE_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      # Claude settings
+      - CLAUDE_HEADLESS=true
+      - CLAUDE_NO_TELEMETRY=true
+    working_dir: /workspace
+    user: claude
+    # Network isolation (no internet by default)
+    network_mode: none
+    # Resource limits
+    mem_limit: 4g
+    cpus: "2.0"
+    # Security options
+    security_opt:
+      - no-new-privileges:true
+    read_only: false
+    tmpfs:
+      - /tmp
+      - /home/claude/.cache
 
-    claude-yolo:
-        extends: claude-safe
-        container_name: claude-code-yolo
-        # Enable network for API access
-        network_mode: bridge
-        command: ["claude", "--dangerously-skip-permissions"]
+  claude-yolo:
+    extends: claude-safe
+    container_name: claude-code-yolo
+    # Enable network for API access
+    network_mode: bridge
+    command: ["claude", "--dangerously-skip-permissions"]
 
-    claude-ci:
-        extends: claude-safe
-        container_name: claude-code-ci
-        network_mode: bridge
-        environment:
-            - CI=true
-            - CLAUDE_HEADLESS=true
-        command:
-            [
-                "claude",
-                "-p",
-                "Run CI pipeline tasks",
-                "--output-format",
-                "stream-json",
-            ]
+  claude-ci:
+    extends: claude-safe
+    container_name: claude-code-ci
+    network_mode: bridge
+    environment:
+      - CI=true
+      - CLAUDE_HEADLESS=true
+    command:
+      [
+        "claude",
+        "-p",
+        "Run CI pipeline tasks",
+        "--output-format",
+        "stream-json",
+      ]
 
 # Volumes for persistent data
 volumes:
-    claude-cache:
-        driver: local
+  claude-cache:
+    driver: local
 
 # Networks
 networks:
-    default:
-        driver: bridge
+  default:
+    driver: bridge

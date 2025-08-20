@@ -1,197 +1,197 @@
 {
-    "mcpServers": {
-        "serena": {
-            "command": "uvx",
-            "args": [
-                "--from",
-                "git+https://github.com/oraios/serena",
-                "serena-mcp-server",
-                "--project",
-                "/Users/admin/Documents/Cursor/claude-code-template-mcp"
-            ],
-            "env": {}
-        },
-        "serena-local": {
-            "command": "/path/to/uv",
-            "args": [
-                "run",
-                "--directory",
-                "/path/to/serena",
-                "serena-mcp-server",
-                "--project",
-                "/Users/admin/Documents/Cursor/claude-code-template-mcp"
-            ],
-            "env": {},
-            "disabled": true
-        },
-        "serena-docker": {
-            "command": "docker",
-            "args": [
-                "run",
-                "--rm",
-                "-i",
-                "--network",
-                "host",
-                "-v",
-                "/Users/admin/Documents/Cursor/AnalyTube/claude-code-template-mcp:/workspaces/projects",
-                "ghcr.io/oraios/serena:latest",
-                "serena-mcp-server",
-                "--transport",
-                "stdio",
-                "--project",
-                "/workspaces/projects"
-            ],
-            "env": {},
-            "disabled": true
-        },
-        "filesystem": {
-            "command": "npx",
-            "args": [
-                "-y",
-                "@modelcontextprotocol/server-filesystem",
-                "/Users/admin/Documents"
-            ],
-            "env": {}
-        },
-        "github": {
-            "command": "npx",
-            "args": ["-y", "@modelcontextprotocol/server-github"],
-            "env": {
-                "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
-            }
-        },
-        "fetch": {
-            "command": "uvx",
-            "args": ["mcp-server-fetch"],
-            "env": {}
-        },
-        "context7": {
-            "command": "npx",
-            "args": ["-y", "@context7/mcp-server"],
-            "env": {}
-        },
-        "brave-search": {
-            "command": "npx",
-            "args": ["-y", "@modelcontextprotocol/server-brave-search"],
-            "env": {
-                "BRAVE_API_KEY": "${BRAVE_API_KEY}"
-            }
-        },
-        "playwright": {
-            "command": "npx",
-            "args": ["@playwright/mcp@latest"],
-            "env": {}
-        },
-        "ide": {
-            "command": "npx",
-            "args": ["-y", "@win32user/mcp-ide"],
-            "env": {}
-        },
-        "firecrawl": {
-            "command": "uvx",
-            "args": ["firecrawl-mcp-server"],
-            "env": {
-                "FIRECRAWL_API_KEY": "${FIRECRAWL_API_KEY}"
-            }
-        },
-        "memory": {
-            "command": "npx",
-            "args": ["-y", "@modelcontextprotocol/server-memory"],
-            "env": {}
-        },
-        "puppeteer": {
-            "command": "npx",
-            "args": ["-y", "@modelcontextprotocol/server-puppeteer"],
-            "env": {}
-        },
-        "sequential-thinking": {
-            "command": "npx",
-            "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
-            "env": {}
-        },
-        "postgres": {
-            "command": "npx",
-            "args": [
-                "-y",
-                "@modelcontextprotocol/server-postgres",
-                "postgresql://localhost/dbname"
-            ],
-            "env": {}
-        },
-        "slack": {
-            "command": "npx",
-            "args": ["-y", "@modelcontextprotocol/server-slack"],
-            "env": {
-                "SLACK_BOT_TOKEN": "${SLACK_BOT_TOKEN}",
-                "SLACK_TEAM_ID": "${SLACK_TEAM_ID}"
-            }
-        },
-        "gitlab": {
-            "command": "npx",
-            "args": ["-y", "@modelcontextprotocol/server-gitlab"],
-            "env": {
-                "GITLAB_PERSONAL_ACCESS_TOKEN": "${GITLAB_TOKEN}",
-                "GITLAB_API_URL": "https://gitlab.com/api/v4"
-            }
-        },
-        "google-maps": {
-            "command": "npx",
-            "args": ["-y", "@modelcontextprotocol/server-google-maps"],
-            "env": {
-                "GOOGLE_MAPS_API_KEY": "${GOOGLE_MAPS_API_KEY}"
-            }
-        },
-        "aws": {
-            "command": "npx",
-            "args": ["-y", "@modelcontextprotocol/server-aws"],
-            "env": {
-                "AWS_ACCESS_KEY_ID": "${AWS_ACCESS_KEY_ID}",
-                "AWS_SECRET_ACCESS_KEY": "${AWS_SECRET_ACCESS_KEY}",
-                "AWS_REGION": "${AWS_REGION}"
-            }
-        },
-        "gcp": {
-            "command": "npx",
-            "args": ["-y", "@modelcontextprotocol/server-gcp"],
-            "env": {
-                "GOOGLE_APPLICATION_CREDENTIALS": "${GOOGLE_APPLICATION_CREDENTIALS}"
-            }
-        },
-        "azure": {
-            "command": "npx",
-            "args": ["-y", "@modelcontextprotocol/server-azure"],
-            "env": {
-                "AZURE_SUBSCRIPTION_ID": "${AZURE_SUBSCRIPTION_ID}",
-                "AZURE_CLIENT_ID": "${AZURE_CLIENT_ID}",
-                "AZURE_CLIENT_SECRET": "${AZURE_CLIENT_SECRET}",
-                "AZURE_TENANT_ID": "${AZURE_TENANT_ID}"
-            }
-        },
-        "docker": {
-            "command": "npx",
-            "args": ["-y", "@modelcontextprotocol/server-docker"],
-            "env": {}
-        },
-        "kubernetes": {
-            "command": "npx",
-            "args": ["-y", "@modelcontextprotocol/server-kubernetes"],
-            "env": {
-                "KUBECONFIG": "${HOME}/.kube/config"
-            }
-        },
-        "smithery-cli": {
-            "command": "npx",
-            "args": ["-y", "@smithery/cli-mcp"],
-            "env": {
-                "SMITHERY_API_KEY": "${SMITHERY_API_KEY}"
-            },
-            "disabled": false
-        },
-        "smithery-stdout": {
-            "command": "npx",
-            "args": ["-y", "@smithery/stdout-mcp-server"],
-            "env": {},
-            "disabled": true
-        }
+  "mcpServers": {
+    "serena": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/oraios/serena",
+        "serena-mcp-server",
+        "--project",
+        "/Users/admin/Documents/Cursor/claude-code-template-mcp"
+      ],
+      "env": {}
+    },
+    "serena-local": {
+      "command": "/path/to/uv",
+      "args": [
+        "run",
+        "--directory",
+        "/path/to/serena",
+        "serena-mcp-server",
+        "--project",
+        "/Users/admin/Documents/Cursor/claude-code-template-mcp"
+      ],
+      "env": {},
+      "disabled": true
+    },
+    "serena-docker": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "--network",
+        "host",
+        "-v",
+        "/Users/admin/Documents/Cursor/AnalyTube/claude-code-template-mcp:/workspaces/projects",
+        "ghcr.io/oraios/serena:latest",
+        "serena-mcp-server",
+        "--transport",
+        "stdio",
+        "--project",
+        "/workspaces/projects"
+      ],
+      "env": {},
+      "disabled": true
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/admin/Documents"
+      ],
+      "env": {}
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      }
+    },
+    "fetch": {
+      "command": "uvx",
+      "args": ["mcp-server-fetch"],
+      "env": {}
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@context7/mcp-server"],
+      "env": {}
+    },
+    "brave-search": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+      "env": {
+        "BRAVE_API_KEY": "${BRAVE_API_KEY}"
+      }
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"],
+      "env": {}
+    },
+    "ide": {
+      "command": "npx",
+      "args": ["-y", "@win32user/mcp-ide"],
+      "env": {}
+    },
+    "firecrawl": {
+      "command": "uvx",
+      "args": ["firecrawl-mcp-server"],
+      "env": {
+        "FIRECRAWL_API_KEY": "${FIRECRAWL_API_KEY}"
+      }
+    },
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"],
+      "env": {}
+    },
+    "puppeteer": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-puppeteer"],
+      "env": {}
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "env": {}
+    },
+    "postgres": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://localhost/dbname"
+      ],
+      "env": {}
+    },
+    "slack": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-slack"],
+      "env": {
+        "SLACK_BOT_TOKEN": "${SLACK_BOT_TOKEN}",
+        "SLACK_TEAM_ID": "${SLACK_TEAM_ID}"
+      }
+    },
+    "gitlab": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-gitlab"],
+      "env": {
+        "GITLAB_PERSONAL_ACCESS_TOKEN": "${GITLAB_TOKEN}",
+        "GITLAB_API_URL": "https://gitlab.com/api/v4"
+      }
+    },
+    "google-maps": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-google-maps"],
+      "env": {
+        "GOOGLE_MAPS_API_KEY": "${GOOGLE_MAPS_API_KEY}"
+      }
+    },
+    "aws": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-aws"],
+      "env": {
+        "AWS_ACCESS_KEY_ID": "${AWS_ACCESS_KEY_ID}",
+        "AWS_SECRET_ACCESS_KEY": "${AWS_SECRET_ACCESS_KEY}",
+        "AWS_REGION": "${AWS_REGION}"
+      }
+    },
+    "gcp": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-gcp"],
+      "env": {
+        "GOOGLE_APPLICATION_CREDENTIALS": "${GOOGLE_APPLICATION_CREDENTIALS}"
+      }
+    },
+    "azure": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-azure"],
+      "env": {
+        "AZURE_SUBSCRIPTION_ID": "${AZURE_SUBSCRIPTION_ID}",
+        "AZURE_CLIENT_ID": "${AZURE_CLIENT_ID}",
+        "AZURE_CLIENT_SECRET": "${AZURE_CLIENT_SECRET}",
+        "AZURE_TENANT_ID": "${AZURE_TENANT_ID}"
+      }
+    },
+    "docker": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-docker"],
+      "env": {}
+    },
+    "kubernetes": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-kubernetes"],
+      "env": {
+        "KUBECONFIG": "${HOME}/.kube/config"
+      }
+    },
+    "smithery-cli": {
+      "command": "npx",
+      "args": ["-y", "@smithery/cli-mcp"],
+      "env": {
+        "SMITHERY_API_KEY": "${SMITHERY_API_KEY}"
+      },
+      "disabled": false
+    },
+    "smithery-stdout": {
+      "command": "npx",
+      "args": ["-y", "@smithery/stdout-mcp-server"],
+      "env": {},
+      "disabled": true
     }
+  }
 }

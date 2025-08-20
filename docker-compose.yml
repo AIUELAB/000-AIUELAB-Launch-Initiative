@@ -1,72 +1,72 @@
 version: "3.8"
 
 services:
-    app:
-        build:
-            context: .
-            dockerfile: Dockerfile
-        image: claude-code-mcp:latest
-        container_name: claude-code-mcp
-        restart: unless-stopped
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: claude-code-mcp:latest
+    container_name: claude-code-mcp
+    restart: unless-stopped
 
-        # 環境変数
-        env_file:
-            - .env.mcp
-        environment:
-            - PYTHONPATH=/app
-            - DEBUG=false
-            - LOG_LEVEL=INFO
+    # 環境変数
+    env_file:
+      - .env.mcp
+    environment:
+      - PYTHONPATH=/app
+      - DEBUG=false
+      - LOG_LEVEL=INFO
 
-        # ボリューム
-        volumes:
-            # ソースコードをマウント（開発時）
-            - ./src:/app/src:ro
-            - ./tests:/app/tests:ro
+    # ボリューム
+    volumes:
+      # ソースコードをマウント（開発時）
+      - ./src:/app/src:ro
+      - ./tests:/app/tests:ro
 
-            # セッションとログの永続化
-            - sessions_data:/app/.sessions
-            - logs_data:/app/logs
+      # セッションとログの永続化
+      - sessions_data:/app/.sessions
+      - logs_data:/app/logs
 
-            # MCPサーバー設定
-            - ./mcp-config:/app/mcp-config:ro
+      # MCPサーバー設定
+      - ./mcp-config:/app/mcp-config:ro
 
-        # ネットワーク
-        networks:
-            - claude-network
+    # ネットワーク
+    networks:
+      - claude-network
 
-        # リソース制限
-        deploy:
-            resources:
-                limits:
-                    cpus: "2.0"
-                    memory: 2G
-                reservations:
-                    cpus: "0.5"
-                    memory: 512M
+    # リソース制限
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
 
-        # ヘルスチェック
-        healthcheck:
-            test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
-            interval: 30s
-            timeout: 10s
-            retries: 3
-            start_period: 40s
+    # ヘルスチェック
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
-        # ロギング設定
-        logging:
-            driver: "json-file"
-            options:
-                max-size: "10m"
-                max-file: "3"
+    # ロギング設定
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 # ボリューム定義
 volumes:
-    sessions_data:
-        driver: local
-    logs_data:
-        driver: local
+  sessions_data:
+    driver: local
+  logs_data:
+    driver: local
 
 # ネットワーク定義
 networks:
-    claude-network:
-        driver: bridge
+  claude-network:
+    driver: bridge

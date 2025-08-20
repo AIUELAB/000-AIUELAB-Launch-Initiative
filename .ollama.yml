@@ -2,43 +2,43 @@
 
 # Default model for different tasks
 models:
-    chat: llama3.2:3b
-    code: codellama:7b
-    analysis: mistral:7b
-    fast: deepseek-r1:1.5b
+  chat: llama3.2:3b
+  code: codellama:7b
+  analysis: mistral:7b
+  fast: deepseek-r1:1.5b
 
 # Model parameters
 parameters:
-    temperature: 0.7
-    top_p: 0.9
-    max_tokens: 2048
-    seed: 42
+  temperature: 0.7
+  top_p: 0.9
+  max_tokens: 2048
+  seed: 42
 
 # System prompts for different use cases
 prompts:
-    code_review: |
-        You are an expert code reviewer. Focus on:
-        - Security vulnerabilities
-        - Performance issues
-        - Code quality and best practices
-        - Potential bugs
+  code_review: |
+    You are an expert code reviewer. Focus on:
+    - Security vulnerabilities
+    - Performance issues
+    - Code quality and best practices
+    - Potential bugs
 
-    documentation: |
-        You are a technical documentation expert.
-        Write clear, concise, and accurate documentation.
+  documentation: |
+    You are a technical documentation expert.
+    Write clear, concise, and accurate documentation.
 
-    testing: |
-        You are a testing expert. Generate comprehensive test cases
-        including edge cases and error scenarios.
+  testing: |
+    You are a testing expert. Generate comprehensive test cases
+    including edge cases and error scenarios.
 
-    refactoring: |
-        You are a refactoring expert. Suggest improvements for:
-        - Code clarity and readability
-        - Performance optimization
-        - Design patterns and architecture
+  refactoring: |
+    You are a refactoring expert. Suggest improvements for:
+    - Code clarity and readability
+    - Performance optimization
+    - Design patterns and architecture
 
 # Performance settings
 performance:
-    num_threads: 8
-    num_gpu: 1 # Set to 0 if no GPU
-    batch_size: 512
+  num_threads: 8
+  num_gpu: 1 # Set to 0 if no GPU
+  batch_size: 512
