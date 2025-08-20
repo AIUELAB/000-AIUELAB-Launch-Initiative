@@ -3,7 +3,7 @@ Ollama Integration for Claude Code Template
 完全無料のローカルLLM統合
 """
 
-from typing import Any
+from typing import Any, Iterator, cast
 
 import ollama
 from langchain_ollama import ChatOllama, OllamaLLM
@@ -29,7 +29,7 @@ class OllamaManager:
         >>> print(response)
     """
 
-    def __init__(self, model: str = "llama3.2:3b"):
+    def __init__(self, model: str = "llama3.2:3b") -> None:
         """Initialize the Ollama manager with specified model.
 
         Args:
@@ -67,10 +67,11 @@ class OllamaManager:
             messages.append({"role": "system", "content": system})
         messages.append({"role": "user", "content": prompt})
 
-        response = self.client.chat(model=self.model, messages=messages)
-        return response["message"]["content"]
+        response = cast(dict[str, Any], self.client.chat(model=self.model, messages=messages))
+        message = cast(dict[str, Any], response.get("message", {}))
+        return cast(str, message.get("content", ""))
 
-    def stream_chat(self, prompt: str, system: str | None = None):
+    def stream_chat(self, prompt: str, system: str | None = None) -> Iterator[str]:
         """Stream chat responses in real-time.
 
         Yields response chunks as they are generated, enabling real-time
@@ -95,7 +96,7 @@ class OllamaManager:
         stream = self.client.chat(model=self.model, messages=messages, stream=True)
 
         for chunk in stream:
-            yield chunk["message"]["content"]
+            yield cast(str, chunk["message"]["content"])
 
     def generate(self, prompt: str) -> str:
         """Generate text completion for a given prompt.
@@ -112,8 +113,8 @@ class OllamaManager:
         Example:
             >>> completion = manager.generate("The future of AI is")
         """
-        response = self.client.generate(model=self.model, prompt=prompt)
-        return response["response"]
+        response = cast(dict[str, Any], self.client.generate(model=self.model, prompt=prompt))
+        return cast(str, response.get("response", ""))
 
     def list_models(self) -> list[dict[str, Any]]:
         """List all locally available Ollama models.
@@ -127,9 +128,10 @@ class OllamaManager:
             >>> for model in models:
             ...     print(f"{model['name']}: {model.get('size', 'N/A')}")
         """
-        return self.client.list()["models"]
+        info = cast(dict[str, Any], self.client.list())
+        return cast(list[dict[str, Any]], info.get("models", []))
 
-    def pull_model(self, model_name: str):
+    def pull_model(self, model_name: str) -> dict[str, Any]:
         """Download a new model from Ollama's model library.
 
         Args:
@@ -145,7 +147,7 @@ class OllamaManager:
         Note:
             This operation may take several minutes depending on model size.
         """
-        return self.client.pull(model_name)
+        return cast(dict[str, Any], self.client.pull(model_name))
 
     def embeddings(self, text: str) -> list[float]:
         """Generate vector embeddings for text.
@@ -164,8 +166,8 @@ class OllamaManager:
             >>> embeddings = manager.embeddings("Python programming")
             >>> print(f"Embedding size: {len(embeddings)}")
         """
-        response = self.client.embeddings(model=self.model, prompt=text)
-        return response["embedding"]
+        response = cast(dict[str, Any], self.client.embeddings(model=self.model, prompt=text))
+        return cast(list[float], response.get("embedding", []))
 
 
 # Example usage functions
