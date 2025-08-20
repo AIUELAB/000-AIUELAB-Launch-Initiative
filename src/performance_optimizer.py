@@ -17,7 +17,7 @@ import hashlib
 import json
 import time
 from collections import OrderedDict
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine, AsyncIterator
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, TypeVar
@@ -237,7 +237,7 @@ class AsyncBatchProcessor:
     async def process(
         self,
         items: list[T],
-        processor: Callable[[T], asyncio.Coroutine],
+        processor: Callable[[T], Coroutine[Any, Any, Any]],
         progress_callback: Callable[[int, int], None] | None = None,
     ) -> list[Any]:
         """Process items in batches"""
@@ -293,7 +293,7 @@ def async_memoize(ttl: timedelta = timedelta(minutes=5)):
             await cache.set(key, result)
             return result
 
-        wrapper.cache = cache  # Expose cache for management
+        wrapper.cache = cache  # type: ignore[attr-defined]  # Expose cache for management
         return wrapper
 
     return decorator
