@@ -1,0 +1,36 @@
+# Binaries and caches
+bin/*.tar.gz
+**/.DS_Store
+**/.cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/.pytest_cache/
+**/__pycache__/
+coverage/
+.build/
+build/
+dist/
+
+# Python envs
+venv/
+.venv/
+
+# Node
+node_modules/
+raycast-n8n-extension/node_modules/
+
+# Local n8n data
+.n8n/
+
+# IDE/Editor
+.vscode/
+.idea/
+
+# Logs and temp
+**/*.log
+**/*.tmp
+**/*.swp
+**/*.swo
+
+# Generated docs/site
+site/

@@ -165,6 +165,7 @@ cat <<EOF
 - N8N_PORT=${N8N_PORT}
 - N8N_USER=${N8N_USER}
 - N8N_PASSWORD=(hidden)
+- OPTIONS: non_interactive=${NON_INTERACTIVE}, force=${FORCE}
 
 次の手順:
 1) 起動:   npm run n8n:start

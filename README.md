@@ -118,7 +118,24 @@ cp -r claude-code-template-mcp my-new-project
 cd my-new-project
 ```
 
-### 2. MCPサーバーのセットアップ
+### 2. n8n のクイックスタート（Raycast 用）
+
+```bash
+# 自動セットアップ + 起動（未使用ポートを自動割当）
+npm run n8n:start:ready
+
+# Raycast の拡張 Preferences → baseUrl を出力に表示された
+# http://localhost:<N8N_PORT> に更新（例: http://localhost:5678）
+
+# 状態確認
+npm run n8n:status
+```
+
+メモ:
+- ポートを変更した場合は Raycast も同じポートに合わせてください
+- 鍵/認証情報は `/Users/admin/Documents/key` を利用（リポジトリ外）
+
+### 3. MCPサーバーのセットアップ
 
 ```bash
 # MCPサーバーをインストール
@@ -127,46 +144,18 @@ bash setup-mcp.sh
 # ※ Serenaを有効にする場合は'y'を選択
 ```
 
-### 3. リモートMCPサーバーのセットアップ（オプション）
+### 4. リモートMCPサーバーのセットアップ（オプション）
 
 ```bash
 # リモートサーバーを設定
 ./scripts/setup-remote-mcp.sh
-
-# またはCLIで管理
-./scripts/mcp-remote-manager.sh add linear  # Linear追加
-./scripts/mcp-remote-manager.sh test       # 接続テスト
-./scripts/mcp-remote-manager.sh profile hybrid  # ハイブリッドプロファイル適用
-```
-
-### 4. APIキーの設定
-
-```bash
-# 環境変数ファイルを作成
-cp .env.mcp.example .env.mcp
-
-# .env.mcpを編集してAPIキーを設定
-# 必須:
-#   - GITHUB_TOKEN (GitHub統合用)
-#   - BRAVE_API_KEY (Web検索用)
-# リモートサーバー用:
-#   - LINEAR_API_KEY
-#   - NOTION_CLIENT_ID/SECRET
-#   - SENTRY_AUTH_TOKEN
-# オプショナル:
-#   - FIRECRAWL_API_KEY
-#   - その他のサービスのキー
 ```
 
 ### 5. Python環境のセットアップ
 
 ```bash
-# 仮想環境を作成
 python3 -m venv venv
-source venv/bin/activate  # macOS/Linux
-# venv\Scripts\activate  # Windows
-
-# 依存関係をインストール
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
