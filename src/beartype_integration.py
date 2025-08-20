@@ -197,6 +197,7 @@ class MCPClient:
         if cached is not None:
             # Type assertion since we know cached value matches return type
             from typing import cast
+
             return cast(dict[str, Any], cached)
 
         # Simulate tool execution
