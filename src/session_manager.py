@@ -19,7 +19,7 @@ from loguru import logger
 class SessionManager:
     """セッション管理クラス"""
 
-    def __init__(self, session_dir: str = ".sessions"):
+    def __init__(self, session_dir: str = ".sessions") -> None:
         """
         セッションマネージャーの初期化
 
@@ -43,10 +43,10 @@ class SessionManager:
         # 前回のセッションを復元
         self.restore_session()
 
-    def _setup_signal_handlers(self):
+    def _setup_signal_handlers(self) -> None:
         """シグナルハンドラーの設定"""
 
-        def signal_handler(signum, frame):
+        def signal_handler(signum: int, frame: object | None) -> None:
             logger.warning(f"Signal {signum} received, saving session...")
             self.save_session()
             sys.exit(0)
@@ -61,7 +61,7 @@ class SessionManager:
         if hasattr(signal, "SIGQUIT"):
             signal.signal(signal.SIGQUIT, signal_handler)  # Quit
 
-    def start_auto_save(self):
+    def start_auto_save(self) -> None:
         """自動保存を開始"""
         if self.auto_save_thread and self.auto_save_thread.is_alive():
             logger.warning("Auto-save is already running")
@@ -72,21 +72,21 @@ class SessionManager:
         self.auto_save_thread.start()
         logger.info(f"Auto-save started (interval: {self.auto_save_interval}s)")
 
-    def stop_auto_save_thread(self):
+    def stop_auto_save_thread(self) -> None:
         """自動保存を停止"""
         self.stop_auto_save.set()
         if self.auto_save_thread:
             self.auto_save_thread.join(timeout=5)
         logger.info("Auto-save stopped")
 
-    def _auto_save_worker(self):
+    def _auto_save_worker(self) -> None:
         """自動保存ワーカースレッド"""
         while not self.stop_auto_save.is_set():
             time.sleep(self.auto_save_interval)
             if not self.stop_auto_save.is_set():
                 self.save_session(is_auto_save=True)
 
-    def save_session(self, is_auto_save: bool = False):
+    def save_session(self, is_auto_save: bool = False) -> None:
         """
         セッションを保存
 
@@ -99,7 +99,7 @@ class SessionManager:
             self.session_data["is_auto_save"] = is_auto_save
 
             # メインセッションファイルに保存
-            with open(self.session_file, "w", encoding="utf-8") as f:
+            with self.session_file.open("w", encoding="utf-8") as f:
                 json.dump(self.session_data, f, indent=2, ensure_ascii=False)
 
             # バックアップを作成（自動保存以外の場合）
@@ -107,7 +107,7 @@ class SessionManager:
                 backup_file = (
                     self.backup_dir / f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
                 )
-                with open(backup_file, "w", encoding="utf-8") as f:
+                with backup_file.open("w", encoding="utf-8") as f:
                     json.dump(self.session_data, f, indent=2, ensure_ascii=False)
 
                 # 古いバックアップを削除（最新10個を保持）
@@ -133,7 +133,7 @@ class SessionManager:
             return False
 
         try:
-            with open(self.session_file, encoding="utf-8") as f:
+            with self.session_file.open(encoding="utf-8") as f:
                 self.session_data = json.load(f)
 
             last_saved = self.session_data.get("last_saved", "Unknown")
@@ -152,7 +152,7 @@ class SessionManager:
 
         for backup_file in backups[:3]:  # 最新3つのバックアップを試す
             try:
-                with open(backup_file, encoding="utf-8") as f:
+                with backup_file.open(encoding="utf-8") as f:
                     self.session_data = json.load(f)
 
                 logger.warning(f"Session restored from backup: {backup_file.name}")
@@ -164,7 +164,7 @@ class SessionManager:
         logger.error("Failed to restore from any backup")
         return False
 
-    def _cleanup_old_backups(self, keep_count: int = 10):
+    def _cleanup_old_backups(self, keep_count: int = 10) -> None:
         """古いバックアップを削除"""
         backups = sorted(self.backup_dir.glob("session_*.json"), reverse=True)
 
@@ -175,7 +175,7 @@ class SessionManager:
             except Exception as e:
                 logger.error(f"Failed to delete {backup_file.name}: {e}")
 
-    def set(self, key: str, value: Any):
+    def set(self, key: str, value: Any) -> None:
         """
         セッションデータを設定
 
@@ -198,7 +198,7 @@ class SessionManager:
         """
         return self.session_data.get(key, default)
 
-    def delete(self, key: str):
+    def delete(self, key: str) -> None:
         """
         セッションデータを削除
 
@@ -208,7 +208,7 @@ class SessionManager:
         if key in self.session_data:
             del self.session_data[key]
 
-    def clear(self):
+    def clear(self) -> None:
         """セッションデータをクリア"""
         self.session_data.clear()
 
@@ -221,7 +221,7 @@ class SessionManager:
         """
         return self.session_data.copy()
 
-    def create_checkpoint(self, name: str = "checkpoint"):
+    def create_checkpoint(self, name: str = "checkpoint") -> None:
         """
         チェックポイントを作成
 
@@ -233,7 +233,7 @@ class SessionManager:
         )
 
         try:
-            with open(checkpoint_file, "w", encoding="utf-8") as f:
+            with checkpoint_file.open("w", encoding="utf-8") as f:
                 json.dump(self.session_data, f, indent=2, ensure_ascii=False)
 
             logger.success(f"Checkpoint created: {checkpoint_file.name}")
@@ -258,7 +258,7 @@ class SessionManager:
             return False
 
         try:
-            with open(checkpoint_file, encoding="utf-8") as f:
+            with checkpoint_file.open(encoding="utf-8") as f:
                 self.session_data = json.load(f)
 
             logger.success(f"Restored from checkpoint: {checkpoint_name}")
@@ -268,7 +268,7 @@ class SessionManager:
             logger.error(f"Failed to restore checkpoint: {e}")
             return False
 
-    def list_checkpoints(self) -> list:
+    def list_checkpoints(self) -> list[str]:
         """
         利用可能なチェックポイントをリスト
 
@@ -278,12 +278,12 @@ class SessionManager:
         checkpoints = list(self.backup_dir.glob("*.json"))
         return [cp.name for cp in sorted(checkpoints, reverse=True)]
 
-    def __enter__(self):
+    def __enter__(self) -> "SessionManager":
         """コンテキストマネージャーのエントリー"""
         self.start_auto_save()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         """コンテキストマネージャーのイグジット"""
         self.stop_auto_save_thread()
         self.save_session()
@@ -310,7 +310,7 @@ def get_session_manager() -> SessionManager:
     return _session_manager
 
 
-def init_session(auto_save: bool = True):
+def init_session(auto_save: bool = True) -> SessionManager:
     """
     セッションを初期化
 
