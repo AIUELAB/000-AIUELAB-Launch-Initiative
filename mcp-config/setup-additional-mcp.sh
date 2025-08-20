@@ -211,7 +211,8 @@ interactive_install() {
     elif [[ "$selection" == "recommended" ]]; then
         servers_to_install=("memory" "sequential-thinking" "postgres" "docker" "obsidian")
     else
-        servers_to_install=($selection)
+        # shellcheck disable=SC2206
+        read -r -a servers_to_install <<< "$selection"
     fi
 
     echo ""

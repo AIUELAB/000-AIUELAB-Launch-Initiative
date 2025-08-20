@@ -8,6 +8,8 @@ ROWS=$(tput lines 2>/dev/null || echo 24)
 
 # Check encoding
 CURRENT_LANG=$LANG
+# CURRENT_LC_ALL is intentionally read-only for display; suppress shellcheck unused warning
+# shellcheck disable=SC2034
 CURRENT_LC_ALL=$LC_ALL
 
 echo "Terminal Configuration Check"
