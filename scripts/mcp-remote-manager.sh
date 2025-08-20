@@ -57,12 +57,12 @@ show_help() {
 
 list_servers() {
     echo -e "\n${BLUE}Configured Remote MCP Servers:${NC}\n"
-    
+
     if command -v claude >/dev/null 2>&1; then
         # Use Claude CLI if available
         claude mcp list --remote 2>/dev/null || true
     fi
-    
+
     # Also show from config file
     if [ -f "$REMOTE_CONFIG" ]; then
         echo -e "\n${YELLOW}From configuration file:${NC}"
@@ -85,7 +85,7 @@ add_server() {
     local name=${2:-}
     local transport=${3:-sse}
     local url=${4:-}
-    
+
     if [ -z "$name" ]; then
         echo -e "${YELLOW}Available servers to add:${NC}"
         echo "  1) Linear (Issue tracking)"
@@ -96,7 +96,7 @@ add_server() {
         echo "  6) Custom server"
         echo
         read -p "Select server (1-6): " choice
-        
+
         case $choice in
             1)
                 name="linear"
@@ -152,9 +152,9 @@ add_server() {
                 ;;
         esac
     fi
-    
+
     echo -e "\n${YELLOW}Adding server: $name${NC}"
-    
+
     # Add using Claude CLI
     if command -v claude >/dev/null 2>&1; then
         if [ ! -z "$header" ]; then
@@ -164,7 +164,7 @@ add_server() {
         else
             claude mcp add --transport "$transport" "$name" "$url" 2>/dev/null || true
         fi
-        
+
         echo -e "${GREEN}✓ Server added: $name${NC}"
     else
         echo -e "${RED}Claude CLI not found. Please install Claude Code.${NC}"
@@ -174,15 +174,15 @@ add_server() {
 
 remove_server() {
     local name=${2:-}
-    
+
     if [ -z "$name" ]; then
         echo -e "${YELLOW}Enter server name to remove:${NC}"
         list_servers
         read -p "Server name: " name
     fi
-    
+
     echo -e "\n${YELLOW}Removing server: $name${NC}"
-    
+
     if command -v claude >/dev/null 2>&1; then
         claude mcp remove "$name" 2>/dev/null || true
         echo -e "${GREEN}✓ Server removed: $name${NC}"
@@ -194,15 +194,15 @@ remove_server() {
 
 test_connectivity() {
     local server=${2:-all}
-    
+
     echo -e "\n${BLUE}Testing Remote Server Connectivity${NC}\n"
-    
+
     if [ "$server" = "all" ]; then
         # Test all servers
         if command -v claude >/dev/null 2>&1; then
             claude mcp test --all 2>/dev/null || true
         fi
-        
+
         # Also run Python connectivity test
         echo -e "\n${YELLOW}Running comprehensive connectivity test...${NC}"
         python3 "$PROJECT_ROOT/src/remote_mcp_integration.py" 2>/dev/null || true
@@ -221,14 +221,14 @@ test_connectivity() {
 
 show_status() {
     echo -e "\n${BLUE}Remote MCP Server Status${NC}\n"
-    
+
     if command -v claude >/dev/null 2>&1; then
         claude mcp status --remote 2>/dev/null || true
     fi
-    
+
     # Check environment variables
     echo -e "\n${YELLOW}Environment Variables:${NC}"
-    
+
     check_env_var() {
         local var=$1
         local desc=$2
@@ -238,11 +238,11 @@ show_status() {
             echo -e "  ${RED}✗${NC} $var is not set ($desc)"
         fi
     }
-    
+
     if [ -f "$ENV_FILE" ]; then
         source "$ENV_FILE"
     fi
-    
+
     check_env_var "LINEAR_API_KEY" "Linear"
     check_env_var "NOTION_CLIENT_ID" "Notion OAuth"
     check_env_var "SENTRY_AUTH_TOKEN" "Sentry"
@@ -253,7 +253,7 @@ show_status() {
 manage_auth() {
     local action=${2:-list}
     local server=${3:-}
-    
+
     case $action in
         list)
             echo -e "\n${BLUE}Authentication Status${NC}\n"
@@ -287,7 +287,7 @@ manage_auth() {
 
 apply_profile() {
     local profile=${2:-}
-    
+
     if [ -z "$profile" ]; then
         echo -e "${YELLOW}Available profiles:${NC}"
         echo "  1) minimal   - Local servers only"
@@ -297,35 +297,35 @@ apply_profile() {
         echo "  5) full      - All servers enabled"
         echo
         read -p "Select profile (1-5): " choice
-        
+
         case $choice in
             1) profile="minimal" ;;
             2) profile="standard" ;;
             3) profile="remote" ;;
             4) profile="hybrid" ;;
             5) profile="full" ;;
-            *) 
+            *)
                 echo -e "${RED}Invalid choice${NC}"
                 exit 1
                 ;;
         esac
     fi
-    
+
     profile_file="$MCP_CONFIG_DIR/profiles/${profile}.json"
-    
+
     if [ ! -f "$profile_file" ]; then
         echo -e "${RED}Profile not found: $profile${NC}"
         exit 1
     fi
-    
+
     echo -e "\n${YELLOW}Applying profile: $profile${NC}"
-    
+
     # Backup current config
     if [ -f "$MCP_CONFIG_DIR/claude_desktop_config.json" ]; then
         cp "$MCP_CONFIG_DIR/claude_desktop_config.json" "$MCP_CONFIG_DIR/claude_desktop_config.backup.json"
         echo -e "${GREEN}✓ Backed up current configuration${NC}"
     fi
-    
+
     # Apply profile
     if [ "$profile" = "remote" ] || [ "$profile" = "hybrid" ]; then
         # Use remote-enabled config
@@ -334,16 +334,16 @@ apply_profile() {
         # Use standard config
         cp "$profile_file" "$MCP_CONFIG_DIR/claude_desktop_config.json"
     fi
-    
+
     echo -e "${GREEN}✓ Profile applied: $profile${NC}"
     echo -e "${YELLOW}Restart Claude Code to apply changes${NC}"
 }
 
 view_logs() {
     local server=${2:-all}
-    
+
     echo -e "\n${BLUE}MCP Server Logs${NC}\n"
-    
+
     if [ "$server" = "all" ]; then
         if command -v claude >/dev/null 2>&1; then
             claude mcp logs --tail 50 2>/dev/null || true
@@ -357,19 +357,19 @@ view_logs() {
 
 edit_config() {
     echo -e "\n${YELLOW}Opening configuration files...${NC}"
-    
+
     # Determine editor
     EDITOR=${EDITOR:-vim}
-    
+
     if command -v code >/dev/null 2>&1; then
         EDITOR=code
     elif command -v cursor >/dev/null 2>&1; then
         EDITOR=cursor
     fi
-    
+
     # Open config files
     $EDITOR "$REMOTE_CONFIG" "$MCP_CONFIG_DIR/claude_desktop_config_remote.json" "$ENV_FILE"
-    
+
     echo -e "${GREEN}✓ Configuration files opened in $EDITOR${NC}"
 }
 

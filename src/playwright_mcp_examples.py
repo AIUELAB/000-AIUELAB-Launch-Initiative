@@ -11,7 +11,7 @@ Playwright MCP サーバー活用例
 
 import json
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import Any
 
 from loguru import logger
 from rich.console import Console
@@ -28,7 +28,7 @@ class BrowserAction:
     action_type: str
     description: str
     mcp_tool: str
-    parameters: Dict[str, Any]
+    parameters: dict[str, Any]
 
 
 class PlaywrightMCPExamples:
@@ -36,7 +36,7 @@ class PlaywrightMCPExamples:
 
     def __init__(self):
         """初期化"""
-        self.actions_log: List[BrowserAction] = []
+        self.actions_log: list[BrowserAction] = []
         logger.info("Playwright MCP Examples initialized")
 
     def show_available_tools(self) -> None:
@@ -86,7 +86,7 @@ class PlaywrightMCPExamples:
 
         console.print(table)
 
-    def example_basic_navigation(self) -> Dict[str, Any]:
+    def example_basic_navigation(self) -> dict[str, Any]:
         """基本的なナビゲーションの例"""
         console.print(Panel.fit("🌐 基本的なナビゲーションの例", style="bold blue"))
 
@@ -114,7 +114,7 @@ class PlaywrightMCPExamples:
         self._display_actions(actions)
         return {"example": "basic_navigation", "actions": len(actions)}
 
-    def example_form_interaction(self) -> Dict[str, Any]:
+    def example_form_interaction(self) -> dict[str, Any]:
         """フォーム操作の例"""
         console.print(Panel.fit("📝 フォーム操作の例", style="bold green"))
 
@@ -164,7 +164,7 @@ class PlaywrightMCPExamples:
         self._display_actions(actions)
         return {"example": "form_interaction", "actions": len(actions)}
 
-    def example_web_scraping(self) -> Dict[str, Any]:
+    def example_web_scraping(self) -> dict[str, Any]:
         """Webスクレイピングの例"""
         console.print(Panel.fit("🔍 Webスクレイピングの例", style="bold yellow"))
 
@@ -206,7 +206,7 @@ class PlaywrightMCPExamples:
         self._display_actions(actions)
         return {"example": "web_scraping", "actions": len(actions)}
 
-    def example_multi_tab_operation(self) -> Dict[str, Any]:
+    def example_multi_tab_operation(self) -> dict[str, Any]:
         """マルチタブ操作の例"""
         console.print(Panel.fit("🗂️ マルチタブ操作の例", style="bold magenta"))
 
@@ -256,7 +256,7 @@ class PlaywrightMCPExamples:
         self._display_actions(actions)
         return {"example": "multi_tab", "actions": len(actions)}
 
-    def example_advanced_interaction(self) -> Dict[str, Any]:
+    def example_advanced_interaction(self) -> dict[str, Any]:
         """高度なインタラクションの例"""
         console.print(Panel.fit("⚡ 高度なインタラクションの例", style="bold red"))
 
@@ -313,7 +313,7 @@ class PlaywrightMCPExamples:
         self._display_actions(actions)
         return {"example": "advanced_interaction", "actions": len(actions)}
 
-    def _display_actions(self, actions: List[BrowserAction]) -> None:
+    def _display_actions(self, actions: list[BrowserAction]) -> None:
         """アクションリストを表示"""
         for i, action in enumerate(actions, 1):
             console.print(f"\n{i}. [cyan]{action.description}[/cyan]")

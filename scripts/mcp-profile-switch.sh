@@ -47,31 +47,31 @@ list_profiles() {
 switch_profile() {
     local profile=$1
     local profile_file="$PROFILES_DIR/${profile}.json"
-    
+
     if [ ! -f "$profile_file" ]; then
         echo -e "${RED}Error: Profile '$profile' not found${NC}"
         list_profiles
         exit 1
     fi
-    
+
     # Backup current configuration
     if [ -f "$CLAUDE_CONFIG" ]; then
         cp "$CLAUDE_CONFIG" "${CLAUDE_CONFIG}.backup"
         echo -e "${BLUE}Backed up current configuration${NC}"
     fi
-    
+
     # Copy new profile
     cp "$profile_file" "$CLAUDE_CONFIG"
     echo -e "${GREEN}✓ Switched to '$profile' profile${NC}"
-    
+
     # Show profile details
     desc=$(grep -o '"description"[[:space:]]*:[[:space:]]*"[^"]*"' "$profile_file" | sed 's/.*: *"\(.*\)"/\1/')
     echo -e "${BLUE}Profile: ${NC}$desc"
-    
+
     # Count active servers
     server_count=$(grep -c '"command"' "$profile_file" || true)
     echo -e "${BLUE}Active servers: ${NC}$server_count"
-    
+
     echo -e "\n${YELLOW}Please restart Claude Code for changes to take effect${NC}"
 }
 

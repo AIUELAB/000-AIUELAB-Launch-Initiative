@@ -6,19 +6,17 @@ Provides utilities for connecting to and managing remote MCP servers
 with support for SSE/HTTP transports and OAuth 2.0 authentication.
 """
 
-import json
-import os
-import time
 import asyncio
-import aiohttp
-from typing import Dict, Any, Optional, List, Union
-from dataclasses import dataclass
-from enum import Enum
+import json
 import logging
-from urllib.parse import urlencode, urlparse
-import hashlib
+import os
 import secrets
+from dataclasses import dataclass
 from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any
+
+import aiohttp
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -51,8 +49,8 @@ class RemoteServerConfig:
     transport: TransportType
     url: str
     auth_type: AuthType
-    headers: Optional[Dict[str, str]] = None
-    oauth_config: Optional[Dict[str, str]] = None
+    headers: dict[str, str] | None = None
+    oauth_config: dict[str, str] | None = None
     timeout: int = 30000
     retry_attempts: int = 3
     tls_verify: bool = True
@@ -65,8 +63,8 @@ class OAuthToken:
     access_token: str
     token_type: str
     expires_at: datetime
-    refresh_token: Optional[str] = None
-    scope: Optional[str] = None
+    refresh_token: str | None = None
+    scope: str | None = None
 
     @property
     def is_expired(self) -> bool:
@@ -84,8 +82,8 @@ class RemoteMCPClient:
 
     def __init__(self, config: RemoteServerConfig):
         self.config = config
-        self.session: Optional[aiohttp.ClientSession] = None
-        self.token: Optional[OAuthToken] = None
+        self.session: aiohttp.ClientSession | None = None
+        self.token: OAuthToken | None = None
         self.sse_client = None
 
     async def __aenter__(self):
@@ -127,7 +125,7 @@ class RemoteMCPClient:
             await self.session.close()
         logger.info(f"Disconnected from {self.config.name}")
 
-    async def _get_auth_headers(self) -> Dict[str, str]:
+    async def _get_auth_headers(self) -> dict[str, str]:
         """Get authentication headers"""
         headers = {}
 
@@ -250,7 +248,7 @@ class RemoteMCPClient:
             logger.warning(f"Health check failed for {self.config.name}: {e}")
             # Don't fail - server might not have health endpoint
 
-    async def send_request(self, method: str, params: Optional[Dict] = None) -> Any:
+    async def send_request(self, method: str, params: dict | None = None) -> Any:
         """Send request to remote MCP server"""
         if not self.session:
             raise RuntimeError("Not connected")
@@ -269,7 +267,7 @@ class RemoteMCPClient:
         else:
             return await self._send_http_request(payload)
 
-    async def _send_http_request(self, payload: Dict) -> Any:
+    async def _send_http_request(self, payload: dict) -> Any:
         """Send HTTP request"""
         for attempt in range(self.config.retry_attempts):
             try:
@@ -284,13 +282,13 @@ class RemoteMCPClient:
                     else:
                         error_text = await response.text()
                         raise Exception(f"Request failed: {response.status} - {error_text}")
-            except aiohttp.ClientError as e:
+            except aiohttp.ClientError:
                 if attempt < self.config.retry_attempts - 1:
                     await asyncio.sleep(2**attempt)
                     continue
                 raise
 
-    async def _send_sse_request(self, payload: Dict) -> Any:
+    async def _send_sse_request(self, payload: dict) -> Any:
         """Send SSE request and wait for response"""
         # For SSE, we need to send via POST and listen for response
         async with self.session.post(f"{self.config.url}/request", json=payload) as response:
@@ -299,7 +297,7 @@ class RemoteMCPClient:
 
             # Read SSE response
             async for line in response.content:
-                line = line.decode('utf-8').strip()
+                line = line.decode("utf-8").strip()
                 if line.startswith("data: "):
                     data = json.loads(line[6:])
                     if data.get("id") == payload["id"]:
@@ -309,8 +307,8 @@ class RemoteMCPClient:
 class RemoteMCPManager:
     """Manager for multiple remote MCP servers"""
 
-    def __init__(self, config_file: Optional[str] = None):
-        self.servers: Dict[str, RemoteMCPClient] = {}
+    def __init__(self, config_file: str | None = None):
+        self.servers: dict[str, RemoteMCPClient] = {}
         self.config_file = config_file or "mcp-config/remote-servers.json"
         self.load_config()
 
@@ -320,13 +318,13 @@ class RemoteMCPManager:
             logger.warning(f"Config file not found: {self.config_file}")
             return
 
-        with open(self.config_file, 'r') as f:
+        with open(self.config_file) as f:
             config = json.load(f)
 
         for name, server_config in config.get("remoteMcpServers", {}).items():
             self.add_server(name, server_config)
 
-    def add_server(self, name: str, config: Dict[str, Any]):
+    def add_server(self, name: str, config: dict[str, Any]):
         """Add a remote server"""
         transport = TransportType(config.get("transport", "http"))
         auth_type = self._determine_auth_type(config)
@@ -346,7 +344,7 @@ class RemoteMCPManager:
         self.servers[name] = RemoteMCPClient(server_config)
         logger.info(f"Added remote server: {name}")
 
-    def _determine_auth_type(self, config: Dict) -> AuthType:
+    def _determine_auth_type(self, config: dict) -> AuthType:
         """Determine authentication type from config"""
         auth = config.get("authentication", {})
 
@@ -370,7 +368,7 @@ class RemoteMCPManager:
         if "${" in value:
             import re
 
-            pattern = r'\$\{([^}]+)\}'
+            pattern = r"\$\{([^}]+)\}"
 
             def replace(match):
                 var_name = match.group(1)
@@ -379,7 +377,7 @@ class RemoteMCPManager:
             return re.sub(pattern, replace, value)
         return value
 
-    def _expand_headers(self, headers: Dict[str, str]) -> Dict[str, str]:
+    def _expand_headers(self, headers: dict[str, str]) -> dict[str, str]:
         """Expand environment variables in headers"""
         return {key: self._expand_env_vars(value) for key, value in headers.items()}
 
@@ -393,7 +391,7 @@ class RemoteMCPManager:
         tasks = [server.disconnect() for server in self.servers.values()]
         await asyncio.gather(*tasks, return_exceptions=True)
 
-    async def test_connectivity(self) -> Dict[str, bool]:
+    async def test_connectivity(self) -> dict[str, bool]:
         """Test connectivity to all servers"""
         results = {}
 
@@ -408,7 +406,7 @@ class RemoteMCPManager:
 
         return results
 
-    def get_server(self, name: str) -> Optional[RemoteMCPClient]:
+    def get_server(self, name: str) -> RemoteMCPClient | None:
         """Get a specific server client"""
         return self.servers.get(name)
 

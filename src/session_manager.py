@@ -5,15 +5,13 @@
 """
 
 import json
-import os
-from base64 import b64encode, b64decode
 import signal
 import sys
 import threading
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 from loguru import logger
 
@@ -34,9 +32,9 @@ class SessionManager:
         self.backup_dir = self.session_dir / "backups"
         self.backup_dir.mkdir(exist_ok=True)
 
-        self.session_data: Dict[str, Any] = {}
+        self.session_data: dict[str, Any] = {}
         self.auto_save_interval = 60  # 秒
-        self.auto_save_thread: Optional[threading.Thread] = None
+        self.auto_save_thread: threading.Thread | None = None
         self.stop_auto_save = threading.Event()
 
         # シグナルハンドラーの設定（クラッシュ対策）
@@ -58,9 +56,9 @@ class SessionManager:
         signal.signal(signal.SIGTERM, signal_handler)  # kill
 
         # Windowsではこれらのシグナルは使用できない
-        if hasattr(signal, 'SIGHUP'):
+        if hasattr(signal, "SIGHUP"):
             signal.signal(signal.SIGHUP, signal_handler)  # ハングアップ
-        if hasattr(signal, 'SIGQUIT'):
+        if hasattr(signal, "SIGQUIT"):
             signal.signal(signal.SIGQUIT, signal_handler)  # Quit
 
     def start_auto_save(self):
@@ -97,11 +95,11 @@ class SessionManager:
         """
         try:
             # タイムスタンプを追加
-            self.session_data['last_saved'] = datetime.now().isoformat()
-            self.session_data['is_auto_save'] = is_auto_save
+            self.session_data["last_saved"] = datetime.now().isoformat()
+            self.session_data["is_auto_save"] = is_auto_save
 
             # メインセッションファイルに保存
-            with open(self.session_file, 'w', encoding='utf-8') as f:
+            with open(self.session_file, "w", encoding="utf-8") as f:
                 json.dump(self.session_data, f, indent=2, ensure_ascii=False)
 
             # バックアップを作成（自動保存以外の場合）
@@ -109,7 +107,7 @@ class SessionManager:
                 backup_file = (
                     self.backup_dir / f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
                 )
-                with open(backup_file, 'w', encoding='utf-8') as f:
+                with open(backup_file, "w", encoding="utf-8") as f:
                     json.dump(self.session_data, f, indent=2, ensure_ascii=False)
 
                 # 古いバックアップを削除（最新10個を保持）
@@ -135,10 +133,10 @@ class SessionManager:
             return False
 
         try:
-            with open(self.session_file, 'r', encoding='utf-8') as f:
+            with open(self.session_file, encoding="utf-8") as f:
                 self.session_data = json.load(f)
 
-            last_saved = self.session_data.get('last_saved', 'Unknown')
+            last_saved = self.session_data.get("last_saved", "Unknown")
             logger.success(f"Session restored from {last_saved}")
             return True
 
@@ -154,7 +152,7 @@ class SessionManager:
 
         for backup_file in backups[:3]:  # 最新3つのバックアップを試す
             try:
-                with open(backup_file, 'r', encoding='utf-8') as f:
+                with open(backup_file, encoding="utf-8") as f:
                     self.session_data = json.load(f)
 
                 logger.warning(f"Session restored from backup: {backup_file.name}")
@@ -214,7 +212,7 @@ class SessionManager:
         """セッションデータをクリア"""
         self.session_data.clear()
 
-    def get_all(self) -> Dict[str, Any]:
+    def get_all(self) -> dict[str, Any]:
         """
         すべてのセッションデータを取得
 
@@ -230,10 +228,12 @@ class SessionManager:
         Args:
             name: チェックポイント名
         """
-        checkpoint_file = self.backup_dir / f"{name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        checkpoint_file = (
+            self.backup_dir / f"{name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        )
 
         try:
-            with open(checkpoint_file, 'w', encoding='utf-8') as f:
+            with open(checkpoint_file, "w", encoding="utf-8") as f:
                 json.dump(self.session_data, f, indent=2, ensure_ascii=False)
 
             logger.success(f"Checkpoint created: {checkpoint_file.name}")
@@ -258,7 +258,7 @@ class SessionManager:
             return False
 
         try:
-            with open(checkpoint_file, 'r', encoding='utf-8') as f:
+            with open(checkpoint_file, encoding="utf-8") as f:
                 self.session_data = json.load(f)
 
             logger.success(f"Restored from checkpoint: {checkpoint_name}")
@@ -294,7 +294,7 @@ class SessionManager:
 
 
 # グローバルセッションマネージャー
-_session_manager: Optional[SessionManager] = None
+_session_manager: SessionManager | None = None
 
 
 def get_session_manager() -> SessionManager:

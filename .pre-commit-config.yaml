@@ -84,7 +84,8 @@ repos:
       rev: v0.10.0.1
       hooks:
           - id: shellcheck
-            args: ["--severity=warning"]
+            args: ["--severity=warning", "--shell=bash"]
+            exclude: "^tests/scripts/.*\\.zsh$|^tests/scripts/load-keys\\.zsh$|^tests/scripts/session-status\\.zsh$"
 
     # Validate GitHub Actions
     - repo: https://github.com/python-jsonschema/check-jsonschema

@@ -130,7 +130,7 @@ declare -A MCP_ENV_VARS=(
 check_installed() {
     local server=$1
     local package=${MCP_SERVERS[$server]}
-    
+
     if npm list -g "$package" &>/dev/null; then
         return 0
     else
@@ -142,18 +142,18 @@ check_installed() {
 show_server_list() {
     echo -e "${YELLOW}利用可能な追加MCPサーバー:${NC}"
     echo ""
-    
+
     local i=1
     for server in "${!MCP_SERVERS[@]}"; do
         local status="${RED}✗${NC}"
         if check_installed "$server"; then
             status="${GREEN}✓${NC}"
         fi
-        
+
         printf "%2d. [%b] %-25s - %s\n" "$i" "$status" "$server" "${MCP_DESCRIPTIONS[$server]}"
         ((i++))
     done | sort -k2
-    
+
     echo ""
     echo -e "${GREEN}✓${NC} = インストール済み, ${RED}✗${NC} = 未インストール"
     echo ""
@@ -163,13 +163,13 @@ show_server_list() {
 install_server() {
     local server=$1
     local package=${MCP_SERVERS[$server]}
-    
+
     echo -e "${YELLOW}Installing $server...${NC}"
-    
+
     # npmでインストール
     if npm install -g "$package"; then
         echo -e "${GREEN}✅ $server installed successfully!${NC}"
-        
+
         # 必要な環境変数を表示
         if [[ -n "${MCP_ENV_VARS[$server]}" ]]; then
             echo -e "${YELLOW}📝 Required environment variables for $server:${NC}"
@@ -178,7 +178,7 @@ install_server() {
             done
             echo -e "${YELLOW}💡 Add these to your .env.mcp file${NC}"
         fi
-        
+
         return 0
     else
         echo -e "${RED}❌ Failed to install $server${NC}"
@@ -189,23 +189,23 @@ install_server() {
 # インタラクティブインストール
 interactive_install() {
     show_server_list
-    
+
     echo -e "${BLUE}インストールするサーバーを選択してください（複数可、スペース区切り）:${NC}"
     echo "例: memory puppeteer postgres"
     echo "all: 全てインストール"
     echo "recommended: 推奨セットをインストール"
     echo "q: 終了"
     echo ""
-    
+
     read -p "> " selection
-    
+
     if [[ "$selection" == "q" ]]; then
         echo "終了します"
         exit 0
     fi
-    
+
     local servers_to_install=()
-    
+
     if [[ "$selection" == "all" ]]; then
         servers_to_install=("${!MCP_SERVERS[@]}")
     elif [[ "$selection" == "recommended" ]]; then
@@ -213,7 +213,7 @@ interactive_install() {
     else
         servers_to_install=($selection)
     fi
-    
+
     echo ""
     echo -e "${BLUE}以下のサーバーをインストールします:${NC}"
     for server in "${servers_to_install[@]}"; do
@@ -223,15 +223,15 @@ interactive_install() {
             echo -e "  ${RED}✗ $server: 不明なサーバー${NC}"
         fi
     done
-    
+
     echo ""
     read -p "続行しますか？ (y/n): " confirm
-    
+
     if [[ "$confirm" != "y" ]]; then
         echo "キャンセルしました"
         exit 0
     fi
-    
+
     echo ""
     for server in "${servers_to_install[@]}"; do
         if [[ -n "${MCP_SERVERS[$server]}" ]]; then
@@ -247,11 +247,11 @@ interactive_install() {
 # 設定例を生成
 generate_config_example() {
     local server=$1
-    
+
     echo -e "${BLUE}設定例 for $server:${NC}"
     echo ""
     echo '```json'
-    
+
     case "$server" in
         "memory")
             cat << 'EOF'
@@ -295,7 +295,7 @@ EOF
             echo "{}"
             ;;
     esac
-    
+
     echo '```'
     echo ""
 }

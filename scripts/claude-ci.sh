@@ -103,38 +103,38 @@ log() {
 # Function to run Claude in Docker
 run_in_docker() {
     log "Setting up Docker environment..."
-    
+
     # Check if Docker is installed
     if ! command -v docker &> /dev/null; then
         echo -e "${RED}Error: Docker is not installed${NC}"
         exit 1
     fi
-    
+
     # Build Docker command
     DOCKER_CMD="docker run --rm"
     DOCKER_CMD="$DOCKER_CMD -v $(pwd):/workspace"
     DOCKER_CMD="$DOCKER_CMD -w /workspace"
     DOCKER_CMD="$DOCKER_CMD -e CLAUDE_API_KEY"
-    
+
     # Add environment variables from .env.mcp if exists
     if [ -f ".env.mcp" ]; then
         DOCKER_CMD="$DOCKER_CMD --env-file .env.mcp"
     fi
-    
+
     # Use official Claude Code Docker image (hypothetical)
     DOCKER_CMD="$DOCKER_CMD anthropic/claude-code:latest"
-    
+
     # Add Claude command
     DOCKER_CMD="$DOCKER_CMD claude"
     DOCKER_CMD="$DOCKER_CMD -p \"$COMMAND\""
     DOCKER_CMD="$DOCKER_CMD --output-format $OUTPUT_FORMAT"
-    
+
     if [ "$SKIP_PERMISSIONS" = true ]; then
         DOCKER_CMD="$DOCKER_CMD --dangerously-skip-permissions"
     fi
-    
+
     log "Executing: $DOCKER_CMD"
-    
+
     # Execute with timeout
     timeout $TIMEOUT bash -c "$DOCKER_CMD"
     return $?
@@ -143,25 +143,25 @@ run_in_docker() {
 # Function to run Claude directly
 run_direct() {
     log "Running Claude Code in headless mode..."
-    
+
     # Check if claude is installed
     if ! command -v claude &> /dev/null; then
         echo -e "${RED}Error: Claude Code is not installed${NC}"
         echo "Install with: npm install -g @anthropic/claude-cli"
         exit 1
     fi
-    
+
     # Build Claude command
     CLAUDE_CMD="claude"
     CLAUDE_CMD="$CLAUDE_CMD -p \"$COMMAND\""
     CLAUDE_CMD="$CLAUDE_CMD --output-format $OUTPUT_FORMAT"
-    
+
     if [ "$SKIP_PERMISSIONS" = true ]; then
         CLAUDE_CMD="$CLAUDE_CMD --dangerously-skip-permissions"
     fi
-    
+
     log "Executing: $CLAUDE_CMD"
-    
+
     # Execute with timeout
     timeout $TIMEOUT bash -c "$CLAUDE_CMD"
     return $?

@@ -27,7 +27,7 @@ fi
 if [ ! -f "$HOME/.config/claude/claude_desktop_config.json" ]; then
     echo "Setting up MCP configuration..."
     mkdir -p $HOME/.config/claude
-    
+
     # Create minimal MCP config
     cat > $HOME/.config/claude/claude_desktop_config.json << 'EOF'
 {

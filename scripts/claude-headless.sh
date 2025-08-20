@@ -86,7 +86,7 @@ log() {
 # Function to run predefined tasks
 run_task() {
     local task=$1
-    
+
     case "$task" in
         test)
             PROMPT="Run all tests and report any failures. Use pytest for Python code."
@@ -164,7 +164,7 @@ OUTPUT_FILE=$(mktemp)
 # Run the command and capture output
 if eval "$CLAUDE_CMD" > "$OUTPUT_FILE" 2>&1; then
     echo -e "${GREEN}✓ Task completed successfully${NC}"
-    
+
     # Process output based on format
     if [ "$OUTPUT_FORMAT" = "json" ] || [ "$OUTPUT_FORMAT" = "stream-json" ]; then
         # For JSON output, pretty-print if jq is available
@@ -177,20 +177,20 @@ if eval "$CLAUDE_CMD" > "$OUTPUT_FILE" 2>&1; then
         # For text output, display as-is
         cat "$OUTPUT_FILE"
     fi
-    
+
     # Clean up
     rm -f "$OUTPUT_FILE"
     exit 0
 else
     EXIT_CODE=$?
     echo -e "${RED}✗ Task failed with exit code: $EXIT_CODE${NC}"
-    
+
     # Show error output
     if [ -f "$OUTPUT_FILE" ]; then
         echo -e "${RED}Error output:${NC}"
         cat "$OUTPUT_FILE"
         rm -f "$OUTPUT_FILE"
     fi
-    
+
     exit $EXIT_CODE
 fi
