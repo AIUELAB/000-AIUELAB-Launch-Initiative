@@ -1,0 +1,155 @@
+{
+  "// 説明": "AI/MCP情報収集システムの設定ファイル",
+
+  "sources": {
+    "// コメント": "情報収集元のWebサイト",
+    "ai_news": [
+      {
+        "name": "OpenAI Blog",
+        "url": "https://openai.com/blog",
+        "type": "blog",
+        "priority": "high",
+        "keywords": ["GPT", "ChatGPT", "API", "update"]
+      },
+      {
+        "name": "Anthropic News",
+        "url": "https://www.anthropic.com/news",
+        "type": "blog",
+        "priority": "high",
+        "keywords": ["Claude", "Constitutional AI", "API"]
+      },
+      {
+        "name": "Hugging Face Blog",
+        "url": "https://huggingface.co/blog",
+        "type": "blog",
+        "priority": "medium",
+        "keywords": ["model", "open source", "transformers"]
+      },
+      {
+        "name": "Google AI Blog",
+        "url": "https://ai.googleblog.com/",
+        "type": "blog",
+        "priority": "medium",
+        "keywords": ["Gemini", "Bard", "PaLM", "LaMDA"]
+      }
+    ],
+
+    "mcp_sources": [
+      {
+        "name": "MCP Official",
+        "url": "https://modelcontextprotocol.io/",
+        "type": "docs",
+        "priority": "high",
+        "keywords": ["MCP", "server", "protocol", "update"]
+      },
+      {
+        "name": "MCP GitHub",
+        "url": "https://github.com/modelcontextprotocol",
+        "type": "github",
+        "priority": "high",
+        "keywords": ["release", "update", "new server"]
+      },
+      {
+        "name": "Claude Code Docs",
+        "url": "https://docs.anthropic.com/en/docs/claude-code",
+        "type": "docs",
+        "priority": "high",
+        "keywords": ["Claude Code", "update", "feature"]
+      }
+    ],
+
+    "tech_news": [
+      {
+        "name": "Hacker News",
+        "url": "https://news.ycombinator.com/",
+        "type": "forum",
+        "priority": "medium",
+        "search_terms": ["AI", "LLM", "GPT", "Claude", "MCP"]
+      },
+      {
+        "name": "Reddit r/MachineLearning",
+        "url": "https://www.reddit.com/r/MachineLearning/",
+        "type": "reddit",
+        "priority": "low",
+        "search_terms": ["breakthrough", "paper", "release"]
+      },
+      {
+        "name": "Twitter/X AI Community",
+        "url": "https://twitter.com/search?q=AI%20OR%20GPT%20OR%20Claude",
+        "type": "social",
+        "priority": "low",
+        "accounts": ["@OpenAI", "@AnthropicAI", "@GoogleAI"]
+      }
+    ],
+
+    "japanese_sources": [
+      {
+        "name": "Zenn AI Topics",
+        "url": "https://zenn.dev/topics/ai",
+        "type": "blog",
+        "priority": "medium",
+        "keywords": ["AI", "ChatGPT", "Claude", "実装"]
+      },
+      {
+        "name": "Qiita AI Tag",
+        "url": "https://qiita.com/tags/ai",
+        "type": "blog",
+        "priority": "low",
+        "keywords": ["AI", "機械学習", "LLM"]
+      }
+    ]
+  },
+
+  "filters": {
+    "// 説明": "有益な情報を判定する条件",
+    "importance_keywords": [
+      "breaking",
+      "release",
+      "update",
+      "new feature",
+      "breakthrough",
+      "announcement",
+      "available",
+      "リリース",
+      "アップデート",
+      "新機能",
+      "公開"
+    ],
+    "exclude_keywords": [
+      "advertisement",
+      "sponsored",
+      "promo",
+      "広告",
+      "PR",
+      "スポンサー"
+    ],
+    "min_relevance_score": 0.7,
+    "max_age_days": 7
+  },
+
+  "notification": {
+    "// 設定": "通知の設定",
+    "channels": {
+      "desktop": true,
+      "slack": false,
+      "email": false,
+      "raycast": true,
+      "n8n_webhook": true
+    },
+    "frequency": {
+      "immediate": ["critical", "breaking"],
+      "daily_digest": ["high", "medium"],
+      "weekly_summary": ["low"]
+    }
+  },
+
+  "schedule": {
+    "// スケジュール": "巡回スケジュール",
+    "intervals": {
+      "high_priority": "*/30 * * * *",
+      "medium_priority": "0 */2 * * *",
+      "low_priority": "0 9,18 * * *"
+    },
+    "timezone": "Asia/Tokyo"
+  }
+}

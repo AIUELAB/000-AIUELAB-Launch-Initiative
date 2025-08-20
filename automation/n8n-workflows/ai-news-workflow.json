@@ -1,0 +1,254 @@
+{
+  "name": "AI News Monitor Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "description": "30分ごとにAI/MCPニュースをチェック"
+    },
+    {
+      "parameters": {
+        "command": "cd /Users/admin/Documents/Cursor/claude-code-template-mcp/automation/ai-news-collector && python3 -c \"import asyncio; from collector import AINewsCollector; asyncio.run(AINewsCollector('config.json').run_collection_cycle())\""
+      },
+      "id": "execute-collector",
+      "name": "Execute News Collector",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "description": "Pythonスクリプトを実行して最新情報を収集"
+    },
+    {
+      "parameters": {
+        "fileName": "/Users/admin/Documents/Cursor/claude-code-template-mcp/automation/ai-news-collector/collected_data/digest_{{$now.format('YYYYMMDD')}}.json"
+      },
+      "id": "read-digest",
+      "name": "Read Digest File",
+      "type": "n8n-nodes-base.readFile",
+      "typeVersion": 1,
+      "position": [650, 300],
+      "description": "収集結果を読み込み"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$json[\"critical\"]}}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        }
+      },
+      "id": "check-critical",
+      "name": "Check Critical News",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [850, 300],
+      "description": "重要なニュースがあるかチェック"
+    },
+    {
+      "parameters": {
+        "webhookUri": "{{$env.N8N_WEBHOOK_URL}}/ai-news-alert",
+        "method": "POST",
+        "body": {
+          "alert_type": "critical",
+          "articles": "={{$json[\"articles\"].filter(a => a.priority === 'critical')}}",
+          "timestamp": "={{$now.toISO()}}",
+          "message": "🚨 重要なAI/MCPアップデートが検出されました！"
+        }
+      },
+      "id": "send-alert",
+      "name": "Send Critical Alert",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [1050, 200],
+      "description": "重要な情報を即座に通知"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * *"
+            }
+          ]
+        }
+      },
+      "id": "daily-summary",
+      "name": "Daily Summary Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 500],
+      "description": "毎朝9時に日次サマリーを送信"
+    },
+    {
+      "parameters": {
+        "operation": "aggregate",
+        "collection": "/Users/admin/Documents/Cursor/claude-code-template-mcp/automation/ai-news-collector/collected_data/",
+        "filter": "digest_*.json",
+        "lastNDays": 1
+      },
+      "id": "aggregate-daily",
+      "name": "Aggregate Daily News",
+      "type": "n8n-nodes-base.fileSystem",
+      "typeVersion": 1,
+      "position": [450, 500],
+      "description": "24時間分のニュースを集計"
+    },
+    {
+      "parameters": {
+        "content": "# 🤖 AI/MCP デイリーダイジェスト\n\n日付: {{$now.format('YYYY年MM月DD日')}}\n\n## 📊 統計\n- 総記事数: {{$json.total_articles}}\n- 重要: {{$json.critical}}\n- 注目: {{$json.high}}\n\n## 🎯 トップニュース\n\n{{$json.articles.slice(0,5).map(a => `### ${a.title}\\n${a.summary}\\n[続きを読む](${a.url})`).join('\\n\\n')}}\n\n---\n_このレポートは自動生成されました_"
+      },
+      "id": "format-summary",
+      "name": "Format Daily Summary",
+      "type": "n8n-nodes-base.markdown",
+      "typeVersion": 1,
+      "position": [650, 500],
+      "description": "日次サマリーをフォーマット"
+    },
+    {
+      "parameters": {
+        "webhookUri": "{{$env.N8N_WEBHOOK_URL}}/daily-digest",
+        "method": "POST",
+        "body": {
+          "type": "daily_digest",
+          "content": "={{$json}}",
+          "timestamp": "={{$now.toISO()}}"
+        }
+      },
+      "id": "send-daily",
+      "name": "Send Daily Digest",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [850, 500],
+      "description": "日次ダイジェストを送信"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Slackに通知を送る場合\nif (items[0].json.priority === 'critical') {\n  const slackMessage = {\n    text: '🚨 重要なAI/MCPアップデート',\n    blocks: [\n      {\n        type: 'header',\n        text: {\n          type: 'plain_text',\n          text: items[0].json.articles[0].title\n        }\n      },\n      {\n        type: 'section',\n        text: {\n          type: 'mrkdwn',\n          text: items[0].json.articles[0].summary\n        }\n      },\n      {\n        type: 'actions',\n        elements: [\n          {\n            type: 'button',\n            text: {\n              type: 'plain_text',\n              text: '詳細を見る'\n            },\n            url: items[0].json.articles[0].url\n          }\n        ]\n      }\n    ]\n  };\n  \n  return [{json: slackMessage}];\n}\n\nreturn items;"
+      },
+      "id": "format-slack",
+      "name": "Format for Slack",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1050, 400],
+      "description": "Slack通知用にフォーマット（オプション）"
+    }
+  ],
+  "connections": {
+    "schedule-trigger": {
+      "main": [
+        [
+          {
+            "node": "execute-collector",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "execute-collector": {
+      "main": [
+        [
+          {
+            "node": "read-digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "read-digest": {
+      "main": [
+        [
+          {
+            "node": "check-critical",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-critical": {
+      "main": [
+        [
+          {
+            "node": "send-alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "daily-summary": {
+      "main": [
+        [
+          {
+            "node": "aggregate-daily",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "aggregate-daily": {
+      "main": [
+        [
+          {
+            "node": "format-summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "format-summary": {
+      "main": [
+        [
+          {
+            "node": "send-daily",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [
+    {
+      "name": "AI",
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "News",
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "Automation",
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    }
+  ]
+}
