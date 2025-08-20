@@ -491,10 +491,10 @@ async def example_usage():
         return f"Result for {param}"
 
     # First call takes 2 seconds
-    result1 = await expensive_operation("test")
+    result1 = await expensive_operation("test")  # noqa: F841
 
     # Second call returns immediately from cache
-    result2 = await expensive_operation("test")
+    result2 = await expensive_operation("test")  # noqa: F841
 
     # Batch processing
     processor = AsyncBatchProcessor(batch_size=5)
@@ -504,14 +504,14 @@ async def example_usage():
         await asyncio.sleep(0.1)
         return item * 2
 
-    results = await processor.process(items, process_item)
+    results = await processor.process(items, process_item)  # noqa: F841
 
     # Use optimized MCP client
     client = OptimizedMCPClient({"name": "test-server", "url": "http://localhost:8000"})
 
     # Batch execute multiple requests
     requests = [{"method": "get_user", "params": {"id": i}} for i in range(10)]
-    batch_results = await client.batch_execute(requests)
+    batch_results = await client.batch_execute(requests)  # noqa: F841
 
     # Get resource stats
     monitor = ResourceMonitor()

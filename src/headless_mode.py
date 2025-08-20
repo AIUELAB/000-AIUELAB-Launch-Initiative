@@ -334,7 +334,7 @@ class HeadlessExecutor:
 
         return results
 
-    async def _run_format(self, params: dict, files: list[str]) -> dict:
+    async def _run_format(self, _params: dict, files: list[str]) -> dict:
         """Run code formatters"""
         results = {}
 
@@ -360,7 +360,7 @@ class HeadlessExecutor:
 
         return results
 
-    async def _run_review(self, params: dict, files: list[str]) -> dict:
+    async def _run_review(self, _params: dict, files: list[str]) -> dict:
         """Run code review checks"""
         results = {"complexity": [], "duplicates": [], "security": [], "todos": []}
 
@@ -381,7 +381,7 @@ class HeadlessExecutor:
 
         return results
 
-    async def _generate_docs(self, params: dict, files: list[str]) -> dict:
+    async def _generate_docs(self, params: dict, _files: list[str]) -> dict:
         """Generate documentation"""
         results = {}
 
@@ -416,7 +416,7 @@ class HeadlessExecutor:
 
         return results
 
-    async def _run_analysis(self, params: dict, files: list[str]) -> dict:
+    async def _run_analysis(self, _params: dict, files: list[str]) -> dict:
         """Run code analysis"""
         results = {}
 
@@ -437,7 +437,7 @@ class HeadlessExecutor:
 
         return results
 
-    async def _run_optimize(self, params: dict, files: list[str]) -> dict:
+    async def _run_optimize(self, params: dict, _files: list[str]) -> dict:
         """Run performance optimization checks"""
         results = {}
 
@@ -465,7 +465,7 @@ class HeadlessExecutor:
 
         return results
 
-    async def _run_security_scan(self, params: dict, files: list[str]) -> dict:
+    async def _run_security_scan(self, _params: dict, files: list[str]) -> dict:
         """Run security scans"""
         results = {}
 

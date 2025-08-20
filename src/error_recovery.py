@@ -83,7 +83,7 @@ class ErrorRecovery:
             show_traceback: トレースバックを表示するか
         """
         error_text = Text()
-        error_text.append("⚠️  Error: ", style="bold red")
+        error_text.append("⚠️ Error: ", style="bold red")
         error_text.append(f"{type(error).__name__}\n", style="red")
         error_text.append("Message: ", style="bold")
         error_text.append(f"{error!s}\n")
