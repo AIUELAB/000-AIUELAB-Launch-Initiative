@@ -172,6 +172,14 @@ cat <<EOF
 2) Raycast: 拡張の Preferences で baseUrl を http://localhost:${N8N_PORT} に設定
 3) 実行:   Raycast から Webhook を実行して確認
 
+オプション（鍵フォルダの読み取り専用マウント例）:
+- docker-compose.n8n.yml の n8n サービスに以下を追加可能:
+
+    volumes:
+      - /Users/admin/Documents/key:/keys:ro
+
+  コンテナ内から /keys/... で参照できます。
+
 ヒント:
 - スクリプトコマンド利用時は N8N_BASE_URL を環境に設定可能:
     export N8N_BASE_URL="http://localhost:${N8N_PORT}"
