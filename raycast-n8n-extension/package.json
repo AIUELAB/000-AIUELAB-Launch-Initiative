@@ -93,6 +93,13 @@
       "type": "textfield",
       "required": false,
       "default": "X-API-Key"
+    },
+    {
+      "name": "externalConfigPath",
+      "title": "External Config Path (optional)",
+      "description": "Local JSON file containing baseUrl/apiKey, e.g. /Users/admin/Documents/Raycast/Raycast Webhook.json",
+      "type": "textfield",
+      "required": false
     }
   ],
   "dependencies": {

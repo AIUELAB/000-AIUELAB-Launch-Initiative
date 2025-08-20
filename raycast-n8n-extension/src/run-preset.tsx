@@ -1,6 +1,6 @@
 import { Action, ActionPanel, Detail, List, Toast, getPreferenceValues, showHUD, showToast, useNavigation } from "@raycast/api";
 import { useEffect, useMemo, useState } from "react";
-import { Preferences, postJson, saveHistoryItem } from "./lib";
+import { Preferences, postJson, saveHistoryItem, resolveConnection } from "./lib";
 import { PRESETS, Preset, RemotePresets, mergeRemotePresets } from "./presets";
 
 export default function Command() {
@@ -32,15 +32,14 @@ export default function Command() {
   const list = useMemo(() => data.filter(p => (p.title?.toLowerCase().includes(query.toLowerCase()) || p.path.includes(query))), [data, query]);
 
   async function run(preset: Preset) {
-    const baseUrl = (getPreferenceValues<{ baseUrl?: string }>().baseUrl || "http://localhost:5678").replace(/\/$/, "");
-    const timeoutSec = Number((getPreferenceValues<{ timeoutSec?: string }>().timeoutSec || "10"));
-    const url = `${baseUrl}${useTest ? "/webhook-test/" : "/webhook/"}${preset.path}`;
+    const conn = await resolveConnection();
+    const url = `${conn.baseUrl}${useTest ? "/webhook-test/" : "/webhook/"}${preset.path}`;
     const payload = preset.defaultPayload || "";
     const headers = preset.headers ? JSON.parse(preset.headers) : undefined;
 
     await showToast({ style: Toast.Style.Animated, title: "Triggering preset...", message: preset.title });
     try {
-      const res = await postJson(url, payload || undefined, headers, timeoutSec * 1000);
+      const res = await postJson(url, payload || undefined, headers, conn.timeoutMs, { apiKey: conn.apiKey, apiKeyHeaderName: conn.apiKeyHeaderName });
       const text = await res.text();
       const short = text.length > 5000 ? text.slice(0, 5000) + "\n…(truncated)" : text;
       if (res.ok) {

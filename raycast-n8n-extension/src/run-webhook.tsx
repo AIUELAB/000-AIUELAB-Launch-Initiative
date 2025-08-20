@@ -1,6 +1,6 @@
 import { Action, ActionPanel, Detail, Form, Toast, getPreferenceValues, showHUD, showToast, useNavigation } from "@raycast/api";
 import { useState } from "react";
-import { Preferences, normalizeUrl, postJson, saveHistoryItem } from "./lib";
+import { Preferences, normalizeUrl, postJson, saveHistoryItem, resolveConnection } from "./lib";
 
 type RequestParts = {
   body?: string;
@@ -52,9 +52,8 @@ export default function Command() {
   const { push } = useNavigation();
 
   const onSubmit = async () => {
-    const baseUrl = prefs.baseUrl || "http://localhost:5678";
-    const timeoutSec = Number(prefs.timeoutSec || "10");
-    const url = normalizeUrl(urlOrPath, baseUrl, useTest);
+    const conn = await resolveConnection();
+    const url = normalizeUrl(urlOrPath, conn.baseUrl, useTest);
 
     await showToast({ style: Toast.Style.Animated, title: "Triggering n8n...", message: url });
 
@@ -68,7 +67,7 @@ export default function Command() {
     }
 
     try {
-      const res = await postJson(url, parts.body, parts.headers, timeoutSec * 1000);
+      const res = await postJson(url, parts.body, parts.headers, conn.timeoutMs, { apiKey: conn.apiKey, apiKeyHeaderName: conn.apiKeyHeaderName });
       const text = await res.text();
       const short = text.length > 5000 ? text.slice(0, 5000) + "\n…(truncated)" : text;
       if (res.ok) {

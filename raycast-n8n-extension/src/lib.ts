@@ -7,6 +7,13 @@ export type Preferences = {
   remotePresetsUrl?: string;
   apiKey?: string;
   apiKeyHeaderName?: string;
+  externalConfigPath?: string;
+};
+
+export type ExternalConfig = {
+  baseUrl?: string;
+  apiKey?: string;
+  apiKeyHeaderName?: string;
 };
 
 export type HistoryItem = {
@@ -17,6 +24,33 @@ export type HistoryItem = {
   status?: number;
   at: number;
 };
+
+async function loadExternalConfig(): Promise<ExternalConfig | null> {
+  try {
+    const prefs = getPreferenceValues<Preferences>();
+    const p = prefs.externalConfigPath?.trim();
+    if (!p) return null;
+    // Raycast 環境では Node fetch で file:// は使えないため、HTTP でなければ中止
+    if (/^https?:\/\//i.test(p)) {
+      const res = await fetch(p);
+      if (!res.ok) return null;
+      return (await res.json()) as ExternalConfig;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export async function resolveConnection(): Promise<{ baseUrl: string; apiKey?: string; apiKeyHeaderName: string; timeoutMs: number }>{
+  const prefs = getPreferenceValues<Preferences>();
+  const ext = await loadExternalConfig();
+  const baseUrl = (ext?.baseUrl || prefs.baseUrl || "http://localhost:5678").replace(/\/$/, "");
+  const apiKey = ext?.apiKey || prefs.apiKey || undefined;
+  const apiKeyHeaderName = (ext?.apiKeyHeaderName || prefs.apiKeyHeaderName || "X-API-Key").trim();
+  const timeoutMs = Number(prefs.timeoutSec || "10") * 1000;
+  return { baseUrl, apiKey, apiKeyHeaderName, timeoutMs };
+}
 
 export function normalizeUrl(input: string, baseUrl: string, useTest: boolean): string {
   const trimmed = input.trim();
@@ -36,13 +70,17 @@ export function withApiKeyHeaders(raw?: Record<string, string>): Record<string, 
   return { ...(raw || {}), [headerName]: apiKey };
 }
 
-export async function postJson(url: string, body: string | undefined, headers: Record<string, string> | undefined, timeoutMs: number): Promise<Response> {
+export async function postJson(url: string, body: string | undefined, headers: Record<string, string> | undefined, timeoutMs: number, override?: { apiKey?: string; apiKeyHeaderName?: string }): Promise<Response> {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);
   try {
+    const preferences = getPreferenceValues<Preferences>();
+    const apiKey = override?.apiKey ?? preferences.apiKey?.trim();
+    const headerName = (override?.apiKeyHeaderName ?? preferences.apiKeyHeaderName ?? "X-API-Key").trim();
+    const mergedHeaders = apiKey ? { ...(headers || {}), [headerName]: apiKey } : headers;
     const res = await fetch(url, {
       method: "POST",
-      headers: withApiKeyHeaders(headers),
+      headers: mergedHeaders,
       body: body || undefined,
       signal: controller.signal,
     });
