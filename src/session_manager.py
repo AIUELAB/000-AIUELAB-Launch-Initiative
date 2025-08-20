@@ -11,7 +11,8 @@ import threading
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, TypeAlias
+from types import TracebackType
 
 from loguru import logger
 
@@ -175,7 +176,9 @@ class SessionManager:
             except Exception as e:
                 logger.error(f"Failed to delete {backup_file.name}: {e}")
 
-    def set(self, key: str, value: Any) -> None:
+    SessionValue: TypeAlias = "str | int | float | bool | dict[str, Any] | list[Any] | None"
+
+    def set(self, key: str, value: SessionValue) -> None:
         """
         セッションデータを設定
 
@@ -185,7 +188,7 @@ class SessionManager:
         """
         self.session_data[key] = value
 
-    def get(self, key: str, default: Any = None) -> Any:
+    def get(self, key: str, default: SessionValue = None) -> SessionValue:
         """
         セッションデータを取得
 
@@ -283,7 +286,12 @@ class SessionManager:
         self.start_auto_save()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
         """コンテキストマネージャーのイグジット"""
         self.stop_auto_save_thread()
         self.save_session()
