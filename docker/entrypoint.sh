@@ -20,7 +20,8 @@ fi
 # Set up environment from mounted .env.mcp if exists
 if [ -f "/workspace/.env.mcp" ]; then
     echo "Loading environment from .env.mcp..."
-    export $(cat /workspace/.env.mcp | grep -v '^#' | xargs)
+    # shellcheck disable=SC2046
+    export "$(grep -v '^#' /workspace/.env.mcp | xargs)"
 fi
 
 # Create MCP config if not exists
@@ -45,17 +46,23 @@ fi
 CLAUDE_FLAGS=""
 
 # Check for --dangerously-skip-permissions
-if [[ " $@ " =~ " --dangerously-skip-permissions " ]] || [[ " $@ " =~ " --yolo " ]]; then
-    echo -e "${YELLOW}Running with --dangerously-skip-permissions${NC}"
-    echo "Container isolation provides safety for unrestricted operations"
-    CLAUDE_FLAGS="$CLAUDE_FLAGS --dangerously-skip-permissions"
-fi
+for arg in "$@"; do
+    if [ "$arg" = "--dangerously-skip-permissions" ] || [ "$arg" = "--yolo" ]; then
+        echo -e "${YELLOW}Running with --dangerously-skip-permissions${NC}"
+        echo "Container isolation provides safety for unrestricted operations"
+        CLAUDE_FLAGS="$CLAUDE_FLAGS --dangerously-skip-permissions"
+        break
+    fi
+done
 
 # Check for headless mode
-if [[ " $@ " =~ " -p " ]] || [[ " $@ " =~ " --prompt " ]]; then
-    echo "Running in headless mode..."
-    CLAUDE_FLAGS="$CLAUDE_FLAGS --no-interactive"
-fi
+for arg in "$@"; do
+    if [ "$arg" = "-p" ] || [ "$arg" = "--prompt" ]; then
+        echo "Running in headless mode..."
+        CLAUDE_FLAGS="$CLAUDE_FLAGS --no-interactive"
+        break
+    fi
+done
 
 # Execute command
 if [ "$1" = "claude" ]; then
