@@ -116,7 +116,7 @@ class Cache(Generic[T]):
 
 # Async support with beartype
 @beartype
-async def fetch_data(urls: list[str], timeout: float = 10.0) -> list[dict[str, str | int] | None]:
+async def fetch_data(urls: list[str]) -> list[dict[str, str | int] | None]:
     """Fetch data from multiple URLs with type checking."""
 
     async def fetch_single(url: str) -> dict[str, str | int] | None:
