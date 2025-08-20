@@ -271,6 +271,8 @@ class RemoteMCPClient:
 
     async def _send_http_request(self, payload: dict) -> Any:
         """Send HTTP request"""
+        if not self.session:
+            raise RuntimeError("Not connected")
         for attempt in range(self.config.retry_attempts):
             try:
                 async with self.session.post(self.config.url, json=payload) as response:
@@ -293,6 +295,8 @@ class RemoteMCPClient:
     async def _send_sse_request(self, payload: dict) -> Any:
         """Send SSE request and wait for response"""
         # For SSE, we need to send via POST and listen for response
+        if not self.session:
+            raise RuntimeError("Not connected")
         async with self.session.post(f"{self.config.url}/request", json=payload) as response:
             if response.status != 200:
                 raise Exception(f"SSE request failed: {response.status}")

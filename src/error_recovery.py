@@ -59,9 +59,10 @@ class ErrorRecovery:
         }
 
         # セッションに記録
-        errors = self.session_manager.get("errors", [])
-        errors.append(error_info)
-        self.session_manager.set("errors", errors[-100:])  # 最新100件を保持
+        current = self.session_manager.get("errors", [])
+        errors_list = current if isinstance(current, list) else []
+        errors_list.append(error_info)
+        self.session_manager.set("errors", errors_list[-100:])  # 最新100件を保持
 
         # ファイルに記録
         with open(self.error_log_file, "a", encoding="utf-8") as f:
@@ -73,7 +74,9 @@ class ErrorRecovery:
 
         logger.error(f"[{context}] {error_info['error_type']}: {error_info['error_message']}")
 
-    def display_error(self, error: Exception, context: str = "", show_traceback: bool = False) -> None:
+    def display_error(
+        self, error: Exception, context: str = "", show_traceback: bool = False
+    ) -> None:
         """
         エラーを見やすく表示
 
@@ -104,7 +107,9 @@ class ErrorRecovery:
         )
         console.print(panel)
 
-    def recover_from_error(self, _error: Exception, recovery_action: Callable | None = None) -> bool:
+    def recover_from_error(
+        self, _error: Exception, recovery_action: Callable | None = None
+    ) -> bool:
         """
         エラーから復旧を試みる
 
