@@ -184,8 +184,8 @@ auto_trigger_n8n('build', success=$success, duration=$duration, output='$output'
     with open("scripts/n8n_hooks.sh", "w", encoding="utf-8") as f:
         f.write(script_content)
 
-    # 実行: 所有者+グループのみ（緩すぎる権限を避ける）
-    os.chmod("scripts/n8n_hooks.sh", 0o750)
+    # 実行: 所有者のみ実行可能（最小権限）
+    os.chmod("scripts/n8n_hooks.sh", 0o700)
     print("Bash integration script created at scripts/n8n_hooks.sh")
 
 
