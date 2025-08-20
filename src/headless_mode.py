@@ -315,7 +315,7 @@ class HeadlessExecutor:
         if files:
             cmd.extend(files)
         else:
-            cmd.extend(["src/", "tests/"])
+            cmd.extend(["src/", TESTS_DIR])
 
         if params.get("fix"):
             cmd.append("--fix")
@@ -328,7 +328,7 @@ class HeadlessExecutor:
         if files:
             cmd.extend(files)
         else:
-            cmd.extend(["src/", "tests/"])
+            cmd.extend(["src/", TESTS_DIR])
 
         black_result = await self._run_command(cmd)
         results["black"] = black_result
@@ -355,7 +355,7 @@ class HeadlessExecutor:
         if files:
             cmd.extend(files)
         else:
-            cmd.extend(["src/", "tests/"])
+            cmd.extend(["src/", TESTS_DIR])
 
         black_result = await self._run_command(cmd)
         results["black"] = black_result
@@ -365,7 +365,7 @@ class HeadlessExecutor:
         if files:
             cmd.extend(files)
         else:
-            cmd.extend(["src/", "tests/"])
+            cmd.extend(["src/", TESTS_DIR])
 
         isort_result = await self._run_command(cmd)
         results["isort"] = isort_result
@@ -443,7 +443,7 @@ class HeadlessExecutor:
         results["maintainability"] = maintainability
 
         # Lines of code
-        cmd = ["cloc", "--json"] + (files or ["src/", "tests/"])
+        cmd = ["cloc", "--json"] + (files or ["src/", TESTS_DIR])
         loc = await self._run_command(cmd)
         results["lines_of_code"] = loc
 
@@ -464,7 +464,7 @@ class HeadlessExecutor:
                 "python",
                 "-m",
                 "pytest",
-                "tests/",
+                TESTS_DIR,
             ]
             profile = await self._run_command(cmd)
             results["profile"] = profile
