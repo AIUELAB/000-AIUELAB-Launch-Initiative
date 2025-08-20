@@ -542,3 +542,11 @@ claude-code
 ```
 
 ### Happy Coding with MCP 🚀
+
+```
+
+## Raycast 外部設定ファイル（任意）
+
+- `externalConfigPath` に URL もしくはローカルパス（絶対/~/、または file://）を指定すると、その JSON から `baseUrl`/`apiKey`/`apiKeyHeaderName` を読み込みます。
+- 例（ローカル雛形）: `public/raycast-n8n-config.json` を参考にしてください。
+- 例（GitHub Raw）: `https://raw.githubusercontent.com/you/repo/main/raycast-n8n-config.json` を指定。
