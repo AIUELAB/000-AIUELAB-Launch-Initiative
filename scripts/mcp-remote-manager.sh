@@ -240,6 +240,7 @@ show_status() {
     }
 
     if [ -f "$ENV_FILE" ]; then
+        # shellcheck source=/dev/null
         source "$ENV_FILE"
     fi
 

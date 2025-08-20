@@ -13,10 +13,15 @@ TARGET="${2:-.}"
 OUTPUT_FORMAT="${3:-text}"
 
 # Colors for output
+# shellcheck disable=SC2034
 RED='\033[0;31m'
+# shellcheck disable=SC2034
 GREEN='\033[0;32m'
+# shellcheck disable=SC2034
 YELLOW='\033[1;33m'
+# shellcheck disable=SC2034
 BLUE='\033[0;34m'
+# shellcheck disable=SC2034
 NC='\033[0m' # No Color
 
 # Function to run basic security scan

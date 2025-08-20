@@ -192,6 +192,7 @@ test_remote_server() {
 
 # Test configured servers
 if [ -f "$ENV_FILE" ]; then
+    # shellcheck source=/dev/null
     source "$ENV_FILE"
 
     if [ ! -z "$LINEAR_API_KEY" ]; then
