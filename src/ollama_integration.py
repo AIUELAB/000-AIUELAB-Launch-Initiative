@@ -174,6 +174,7 @@ class OllamaManager:
 # Example usage functions
 DEFAULT_CODE_MODEL = "codellama:7b"
 
+
 def code_review(code: str, model: str = DEFAULT_CODE_MODEL) -> str:
     """Perform automated code review using Ollama.
 

@@ -30,13 +30,13 @@ detect_python_errors() {
 # テスト実行と結果をn8nに送信
 run_tests_with_n8n() {
     echo "🧪 Running tests with n8n integration..."
-    
+
     start_time=$(date +%s)
     test_output=$(pytest tests/ -v 2>&1)
     exit_code=$?
     end_time=$(date +%s)
     duration=$((end_time - start_time))
-    
+
     if [ $exit_code -eq 0 ]; then
         echo "✅ Tests passed"
         status="success"
@@ -44,7 +44,7 @@ run_tests_with_n8n() {
         echo "❌ Tests failed"
         status="failed"
     fi
-    
+
     # n8nに結果を送信
     if check_n8n; then
         curl -s "${N8N_URL}/webhook/test-results" \
@@ -52,7 +52,7 @@ run_tests_with_n8n() {
             --data-urlencode "duration=$duration" \
             --data-urlencode "summary=${test_output: -500}"
     fi
-    
+
     echo "$test_output"
     return $exit_code
 }
@@ -60,19 +60,19 @@ run_tests_with_n8n() {
 # ビルド実行とn8n通知
 build_with_n8n() {
     echo "🔨 Building with n8n integration..."
-    
+
     start_time=$(date +%s)
     build_output=$(npm run build 2>&1)
     exit_code=$?
     end_time=$(date +%s)
     duration=$((end_time - start_time))
-    
+
     if check_n8n; then
         curl -s "${N8N_URL}/webhook/build-complete" \
             -G --data-urlencode "success=$([[ $exit_code -eq 0 ]] && echo 'true' || echo 'false')" \
             --data-urlencode "duration=$duration"
     fi
-    
+
     echo "$build_output"
     return $exit_code
 }
@@ -80,7 +80,7 @@ build_with_n8n() {
 # Gitフックとn8n統合
 setup_git_hooks() {
     echo "📎 Setting up Git hooks with n8n..."
-    
+
     cat > .git/hooks/pre-commit << 'EOF'
 #!/bin/bash
 # n8n統合付きpre-commitフック
@@ -96,7 +96,7 @@ fi
 # 通常のpre-commitチェックを続行
 exit 0
 EOF
-    
+
     chmod +x .git/hooks/pre-commit
     echo "✅ Git hooks installed"
 }
