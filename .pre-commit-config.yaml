@@ -43,8 +43,10 @@ repos:
           # Ruff linter
           - id: ruff
             args: [--fix, --exit-non-zero-on-fix]
+            files: ^(src/|raycast-n8n-extension/)
           # Ruff formatter (Black互換)
           - id: ruff-format
+            files: ^(src/|raycast-n8n-extension/)
 
     # Type checking with mypy
     - repo: https://github.com/pre-commit/mirrors-mypy
@@ -53,6 +55,7 @@ repos:
           - id: mypy
             additional_dependencies: [types-requests, types-pyyaml, pydantic]
             args: [--ignore-missing-imports]
+            files: ^src/
 
     # Security checks with bandit
     - repo: https://github.com/PyCQA/bandit
