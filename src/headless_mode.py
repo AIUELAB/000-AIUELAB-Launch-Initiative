@@ -362,7 +362,7 @@ class HeadlessExecutor:
 
     async def _run_review(self, _params: dict, files: list[str]) -> dict:
         """Run code review checks"""
-        results = {"complexity": [], "duplicates": [], "security": [], "todos": []}
+        results: dict[str, Any] = {"complexity": {}, "duplicates": {}, "security": {}, "todos": {}}
 
         # Check complexity
         cmd = ["radon", "cc", "-s"] + (files or ["src/"])

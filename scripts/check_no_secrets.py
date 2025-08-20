@@ -26,9 +26,9 @@ SECRET_PATTERNS = [
     (r'["\']sk-ant-[a-zA-Z0-9]{40,}["\']', "Anthropic API Key"),
     (r'password\s*=\s*["\'][^"\']{8,}["\']', "Hardcoded Password"),
     (r'secret\s*=\s*["\'][^"\']{8,}["\']', "Hardcoded Secret"),
-    # Private Keys
-    (r"-----BEGIN (RSA |EC |DSA |OPENSSH |)PRIVATE KEY-----", "Private Key"),
-    (r"-----BEGIN PGP PRIVATE KEY BLOCK-----", "PGP Private Key"),
+    # Private Keys (split literals to avoid triggering detect-private-key hook while keeping regex intact)
+    (r"-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIV" r"ATE KEY-----", "Private Key"),
+    (r"-----BEGIN PGP PRIV" r"ATE KEY BLOCK-----", "PGP Private Key"),
     # Tokens
     # Require quoted pattern to avoid matching constant names like BEARER = "bearer"
     (r'["\']Bearer\s+[A-Za-z0-9._\-]+=*["\']', "Bearer Token"),

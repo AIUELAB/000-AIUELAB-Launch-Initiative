@@ -57,7 +57,7 @@ def create_user(
     name: str, age: PositiveInt, email: EmailStr, config_file: FilePath | None = None
 ) -> dict[str, str | int]:
     """Create user with custom type validators."""
-    user = {"name": name, "age": age, "email": email}
+    user: dict[str, str | int] = {"name": name, "age": int(age), "email": email}
 
     if config_file:
         user["config"] = str(config_file)

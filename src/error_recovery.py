@@ -154,8 +154,8 @@ def with_retry(max_retries: int = 3, delay: int = 1, backoff: float = 2.0):
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         @functools.wraps(func)
         def wrapper(*args, **kwargs) -> T:
-            last_exception = None
-            current_delay = delay
+            last_exception: Exception | None = None
+            current_delay: float = float(delay)
 
             for attempt in range(max_retries + 1):
                 try:
@@ -175,6 +175,9 @@ def with_retry(max_retries: int = 3, delay: int = 1, backoff: float = 2.0):
 
             if last_exception:
                 raise last_exception
+
+            # Should be unreachable, but helps type checkers
+            raise AssertionError("with_retry wrapper reached unreachable state")
 
         return wrapper
 

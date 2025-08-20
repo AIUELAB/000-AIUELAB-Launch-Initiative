@@ -199,7 +199,8 @@ class SessionManager:
         Returns:
             セッションデータ
         """
-        return self.session_data.get(key, default)
+        value: object = self.session_data.get(key, default)  # mypy: concrete union not provable
+        return value  # type: ignore[return-value]
 
     def delete(self, key: str) -> None:
         """
