@@ -10,7 +10,9 @@
         "list-mcp": "npm list -g --depth=0 | grep @modelcontextprotocol",
         "docs": "mkdocs serve",
         "docs-build": "mkdocs build",
+        "n8n:setup": "scripts/setup-n8n.sh --non-interactive",
         "n8n:start": "docker compose -f docker-compose.n8n.yml --env-file .env.n8n up -d",
+        "n8n:start:ready": "npm run n8n:setup && npm run n8n:start",
         "n8n:stop": "docker compose -f docker-compose.n8n.yml --env-file .env.n8n down",
         "n8n:logs": "docker compose -f docker-compose.n8n.yml --env-file .env.n8n logs -f n8n",
         "n8n:reset": "docker compose -f docker-compose.n8n.yml --env-file .env.n8n down -v && docker compose -f docker-compose.n8n.yml --env-file .env.n8n up -d"
