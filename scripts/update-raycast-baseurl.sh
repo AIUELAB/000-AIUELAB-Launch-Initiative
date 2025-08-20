@@ -23,11 +23,23 @@ if [ -f "$KEY_FILE" ]; then
   API_KEY="$(cat "$KEY_FILE" | tr -d '\r\n')"
 fi
 
-# Raycast のアプリサポートディレクトリ（macOS）
-PREF_ROOT="$HOME/Library/Application Support/Raycast"
+# 候補の Raycast 設定ディレクトリ（macOS）
+CANDIDATES=(
+  "$HOME/Library/Application Support/Raycast"
+  "$HOME/Library/Containers/com.raycast.macos/Data/Library/Application Support/Raycast"
+)
 
-if [ ! -d "$PREF_ROOT" ]; then
-  echo "Raycast preference dir not found: $PREF_ROOT" >&2
+PREF_ROOT=""
+for d in "${CANDIDATES[@]}"; do
+  if [ -d "$d" ]; then
+    PREF_ROOT="$d"
+    break
+  fi
+done
+
+if [ -z "$PREF_ROOT" ]; then
+  echo "Raycast preference dir not found. Tried:" >&2
+  for d in "${CANDIDATES[@]}"; do echo " - $d" >&2; done
   exit 0
 fi
 
@@ -56,9 +68,9 @@ while IFS= read -r -d '' file; do
 done < <(find "$PREF_ROOT" -type f -name "*.json" -print0)
 
 if [ "$UPDATED" -eq 0 ]; then
-  echo "No matching Raycast preferences found. Please update in Raycast Preferences manually." >&2
+  echo "No matching Raycast preferences found in: $PREF_ROOT. Please update in Raycast Preferences manually." >&2
 else
-  echo "✅ Updated Raycast preferences in $UPDATED place(s)."
+  echo "✅ Updated Raycast preferences in $UPDATED place(s). ($PREF_ROOT)"
 fi
 
 exit 0
