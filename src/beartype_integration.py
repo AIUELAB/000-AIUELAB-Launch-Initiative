@@ -196,7 +196,8 @@ class MCPClient:
         cached = self._cache.get(cache_key)
         if cached is not None:
             # Type assertion since we know cached value matches return type
-            return cached  # type: ignore[return-value]
+            from typing import cast
+            return cast(dict[str, Any], cached)
 
         # Simulate tool execution
         result = {"tool": tool_name, "status": "success", "result": params}
