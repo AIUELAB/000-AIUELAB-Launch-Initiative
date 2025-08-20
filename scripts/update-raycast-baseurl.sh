@@ -27,6 +27,7 @@ fi
 CANDIDATES=(
   "$HOME/Library/Application Support/Raycast"
   "$HOME/Library/Containers/com.raycast.macos/Data/Library/Application Support/Raycast"
+  "/Users/admin/Documents/Raycast"
 )
 
 PREF_ROOT=""
