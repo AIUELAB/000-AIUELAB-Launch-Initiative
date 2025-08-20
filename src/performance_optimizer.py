@@ -462,17 +462,17 @@ _disk_cache = PersistentCache()
 _connection_pool = ConnectionPool()
 
 
-async def get_memory_cache() -> LRUCache:
+def get_memory_cache() -> LRUCache:
     """Get singleton memory cache"""
     return _memory_cache
 
 
-async def get_disk_cache() -> PersistentCache:
+def get_disk_cache() -> PersistentCache:
     """Get singleton disk cache"""
     return _disk_cache
 
 
-async def get_connection_pool() -> ConnectionPool:
+def get_connection_pool() -> ConnectionPool:
     """Get singleton connection pool"""
     return _connection_pool
 
@@ -495,10 +495,10 @@ async def example_usage():
         return f"Result for {param}"
 
     # First call takes 2 seconds
-    result1 = await expensive_operation("test")  # noqa: F841
+    await expensive_operation("test")
 
     # Second call returns immediately from cache
-    result2 = await expensive_operation("test")  # noqa: F841
+    await expensive_operation("test")
 
     # Batch processing
     processor = AsyncBatchProcessor(batch_size=5)
@@ -508,14 +508,14 @@ async def example_usage():
         await asyncio.sleep(0.1)
         return item * 2
 
-    results = await processor.process(items, process_item)  # noqa: F841
+    await processor.process(items, process_item)
 
     # Use optimized MCP client
     client = OptimizedMCPClient({"name": "test-server", "url": "http://localhost:8000"})
 
     # Batch execute multiple requests
     requests = [{"method": "get_user", "params": {"id": i}} for i in range(10)]
-    batch_results = await client.batch_execute(requests)  # noqa: F841
+    await client.batch_execute(requests)
 
     # Get resource stats
     monitor = ResourceMonitor()
