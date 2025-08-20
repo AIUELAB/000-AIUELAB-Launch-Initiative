@@ -1,0 +1,24 @@
+# AI/MCP情報収集システムの依存関係
+
+# 非同期処理
+aiohttp>=3.9.0
+asyncio
+
+# RSS/Atom フィード解析
+feedparser>=6.0.0
+
+# Webスクレイピング（オプション）
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+
+# データ処理
+pandas>=2.0.0
+
+# 通知システム
+requests>=2.31.0
+
+# スケジューリング（オプション）
+schedule>=1.2.0
+
+# 環境変数管理
+python-dotenv>=1.0.0

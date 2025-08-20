@@ -1,0 +1,42 @@
+{
+  "// コメント": "n8nの設定ファイル",
+  "// 説明": "n8nのWebhook URLとAPIキーを設定してください",
+
+  "webhook_endpoints": {
+    "// 用途": "各種Webhookエンドポイント",
+    "deploy_to_vercel": "https://your-n8n.app/webhook/deploy-vercel",
+    "run_automation": "https://your-n8n.app/webhook/run-automation",
+    "sync_with_github": "https://your-n8n.app/webhook/sync-github",
+    "test_ios_app": "https://your-n8n.app/webhook/test-ios",
+    "backup_project": "https://your-n8n.app/webhook/backup"
+  },
+
+  "api_settings": {
+    "// 説明": ".envファイルのN8N_API_KEYを使用します",
+    "base_url": "https://your-n8n.app/api/v1",
+    "api_key": "${N8N_API_KEY}",
+    "timeout": 30000
+  },
+
+  "workflows": {
+    "// 説明": "よく使うワークフローのID",
+    "daily_backup": "workflow_001",
+    "code_review": "workflow_002",
+    "deploy_production": "workflow_003",
+    "test_suite": "workflow_004"
+  },
+
+  "notifications": {
+    "// 設定": "通知の送信先",
+    "slack_webhook": "",
+    "email": "",
+    "discord_webhook": ""
+  },
+
+  "// 使い方": [
+    "1. n8nダッシュボードでWebhookノードを作成",
+    "2. Webhook URLをこのファイルにコピー",
+    "3. APIキーを.envファイルに設定",
+    "4. scripts/run-n8n-workflow.shで実行"
+  ]
+}

@@ -1,0 +1,154 @@
+{
+  "name": "Vercel Auto Deploy Workflow",
+  "nodes": [
+    {
+      "id": "webhook_trigger",
+      "type": "webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "vercel-deploy",
+      "webhookUrl": "/webhook/vercel-deploy",
+      "httpMethod": "POST",
+      "responseMode": "responseNode",
+      "responseData": "allEntries"
+    },
+    {
+      "id": "check_changes",
+      "type": "execute_command",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "command": "git status --porcelain",
+      "cwd": "/Users/admin/Documents/AIUELAB/000-AIUELAB-Launch-Initiative"
+    },
+    {
+      "id": "run_tests",
+      "type": "execute_command",
+      "typeVersion": 1,
+      "position": [650, 300],
+      "command": "npm test",
+      "cwd": "/Users/admin/Documents/AIUELAB/000-AIUELAB-Launch-Initiative",
+      "continueOnFail": false
+    },
+    {
+      "id": "deploy_vercel",
+      "type": "execute_command",
+      "typeVersion": 1,
+      "position": [850, 300],
+      "command": "./scripts/vercel-auto-deploy.sh production 'Auto deploy from n8n'",
+      "cwd": "/Users/admin/Documents/AIUELAB/000-AIUELAB-Launch-Initiative"
+    },
+    {
+      "id": "notify_success",
+      "type": "http_request",
+      "typeVersion": 1,
+      "position": [1050, 200],
+      "requestMethod": "POST",
+      "url": "{{ $env.SLACK_WEBHOOK_URL }}",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "text": "✅ aiuelab.com デプロイ成功",
+        "blocks": [
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": "*デプロイ完了* 🚀\\n• サイト: https://aiuelab.com\\n• 環境: Production\\n• 時刻: {{ $now }}"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "notify_failure",
+      "type": "http_request",
+      "typeVersion": 1,
+      "position": [1050, 400],
+      "requestMethod": "POST",
+      "url": "{{ $env.SLACK_WEBHOOK_URL }}",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "text": "❌ aiuelab.com デプロイ失敗",
+        "blocks": [
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": "*デプロイエラー* ⚠️\\n• エラー: {{ $json.error }}\\n• 時刻: {{ $now }}"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "connections": {
+    "webhook_trigger": {
+      "main": [
+        [
+          {
+            "node": "check_changes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_changes": {
+      "main": [
+        [
+          {
+            "node": "run_tests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "run_tests": {
+      "main": [
+        [
+          {
+            "node": "deploy_vercel",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "notify_failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "deploy_vercel": {
+      "main": [
+        [
+          {
+            "node": "notify_success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "notify_failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "trigger": {
+    "schedule": {
+      "cron": "0 2 * * *"
+    },
+    "manual": true,
+    "webhook": true
+  }
+}

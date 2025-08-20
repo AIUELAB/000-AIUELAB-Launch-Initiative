@@ -1,0 +1,197 @@
+{
+  "name": "iOS Community Event Monitor",
+  "description": "iOS Discord Tokyo, Love Swift のイベント情報を自動収集・通知",
+  "nodes": [
+    {
+      "id": "schedule_trigger",
+      "type": "schedule",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "schedule": "0 */6 * * *",
+      "timezone": "Asia/Tokyo",
+      "description": "6時間ごとにチェック"
+    },
+    {
+      "id": "fetch_connpass_ios_discord",
+      "type": "http_request",
+      "typeVersion": 1,
+      "position": [450, 200],
+      "requestMethod": "GET",
+      "url": "https://connpass.com/api/v1/event/",
+      "queryParameters": {
+        "series_id": "14027",
+        "order": "2",
+        "count": "20"
+      }
+    },
+    {
+      "id": "fetch_connpass_love_swift",
+      "type": "http_request",
+      "typeVersion": 1,
+      "position": [450, 400],
+      "requestMethod": "GET",
+      "url": "https://connpass.com/api/v1/event/",
+      "queryParameters": {
+        "keyword": "Love Swift",
+        "order": "2",
+        "count": "20"
+      }
+    },
+    {
+      "id": "merge_events",
+      "type": "function",
+      "typeVersion": 1,
+      "position": [650, 300],
+      "code": "// イベントをマージして重複を除去\nconst iosDiscordEvents = $input.all()[0].json.events || [];\nconst loveSwiftEvents = $input.all()[1].json.events || [];\n\nconst allEvents = [...iosDiscordEvents, ...loveSwiftEvents];\nconst uniqueEvents = [];\nconst seenIds = new Set();\n\nfor (const event of allEvents) {\n  if (!seenIds.has(event.event_id)) {\n    seenIds.add(event.event_id);\n    uniqueEvents.push(event);\n  }\n}\n\n// 日付でソート\nuniqueEvents.sort((a, b) => new Date(a.started_at) - new Date(b.started_at));\n\n// 今後のイベントのみフィルタ\nconst now = new Date();\nconst upcomingEvents = uniqueEvents.filter(e => new Date(e.started_at) > now);\n\nreturn { events: upcomingEvents };"
+    },
+    {
+      "id": "check_new_events",
+      "type": "function",
+      "typeVersion": 1,
+      "position": [850, 300],
+      "code": "// 新しいイベントをチェック\nconst events = $input.all()[0].json.events;\nconst cache = $getWorkflowStaticData('notified_events') || [];\nconst newEvents = [];\n\nfor (const event of events) {\n  if (!cache.includes(event.event_id)) {\n    newEvents.push(event);\n    cache.push(event.event_id);\n  }\n}\n\n// キャッシュを更新（最新100件のみ保持）\n$setWorkflowStaticData('notified_events', cache.slice(-100));\n\nreturn { newEvents, hasNew: newEvents.length > 0 };"
+    },
+    {
+      "id": "format_discord_message",
+      "type": "function",
+      "typeVersion": 1,
+      "position": [1050, 300],
+      "code": "// Discord用メッセージフォーマット\nconst newEvents = $input.all()[0].json.newEvents;\n\nif (newEvents.length === 0) {\n  return { skip: true };\n}\n\nconst embeds = newEvents.slice(0, 5).map(event => {\n  const startTime = new Date(event.started_at);\n  const dateStr = startTime.toLocaleDateString('ja-JP', {\n    month: 'numeric',\n    day: 'numeric',\n    hour: 'numeric',\n    minute: '2-digit'\n  });\n  \n  return {\n    title: event.title,\n    url: event.event_url,\n    description: event.catch || '',\n    color: 0x007AFF, // iOS Blue\n    fields: [\n      {\n        name: '📅 日時',\n        value: dateStr,\n        inline: true\n      },\n      {\n        name: '📍 場所',\n        value: event.place || 'オンライン',\n        inline: true\n      },\n      {\n        name: '👥 参加者',\n        value: `${event.accepted}/${event.limit || '∞'}`,\n        inline: true\n      }\n    ],\n    footer: {\n      text: event.series ? event.series.title : 'iOS Community Event'\n    },\n    timestamp: new Date().toISOString()\n  };\n});\n\nreturn {\n  content: '🎉 **新しいiOSイベントが公開されました！**',\n  embeds\n};"
+    },
+    {
+      "id": "post_to_discord_ios_tokyo",
+      "type": "http_request",
+      "typeVersion": 1,
+      "position": [1250, 200],
+      "requestMethod": "POST",
+      "url": "{{ $env.DISCORD_WEBHOOK_EVENTS }}",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": "{{ $json }}",
+      "continueOnFail": true
+    },
+    {
+      "id": "post_to_twitter",
+      "type": "function",
+      "typeVersion": 1,
+      "position": [1250, 400],
+      "code": "// Twitter投稿用フォーマット\nconst newEvents = $input.all()[0].json.newEvents;\n\nif (newEvents.length === 0) {\n  return { skip: true };\n}\n\nconst event = newEvents[0]; // 最新のイベントのみ\nconst startTime = new Date(event.started_at);\nconst dateStr = startTime.toLocaleDateString('ja-JP', {\n  month: 'numeric',\n  day: 'numeric',\n  hour: 'numeric',\n  minute: '2-digit'\n});\n\nconst tweet = `🎉 iOS イベント情報\\n\\n${event.title}\\n📅 ${dateStr}\\n📍 ${event.place || 'オンライン'}\\n\\n詳細・申込👇\\n${event.event_url}\\n\\n#iOS #Swift #iOSDev #東京`;\n\nreturn { tweet, event_url: event.event_url };"
+    },
+    {
+      "id": "save_to_database",
+      "type": "database",
+      "typeVersion": 1,
+      "position": [1250, 600],
+      "operation": "insert",
+      "table": "ios_events",
+      "columns": {
+        "event_id": "{{ $json.event_id }}",
+        "title": "{{ $json.title }}",
+        "url": "{{ $json.event_url }}",
+        "started_at": "{{ $json.started_at }}",
+        "place": "{{ $json.place }}",
+        "limit": "{{ $json.limit }}",
+        "accepted": "{{ $json.accepted }}",
+        "series": "{{ $json.series.title }}",
+        "notified_at": "{{ $now }}"
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "generate_calendar",
+      "type": "function",
+      "typeVersion": 1,
+      "position": [1450, 300],
+      "code": "// カレンダー Markdown 生成\nconst events = $input.all()[0].json.events;\n\nlet markdown = '# 📅 iOS コミュニティイベントカレンダー\\n\\n';\nmarkdown += '## 今後のイベント\\n\\n';\nmarkdown += '| 日時 | イベント | 場所 | 参加者 | 申込 |\\n';\nmarkdown += '|------|----------|------|--------|------|\\n';\n\nevents.slice(0, 20).forEach(event => {\n  const startTime = new Date(event.started_at);\n  const dateStr = startTime.toLocaleDateString('ja-JP', {\n    month: 'numeric',\n    day: 'numeric',\n    hour: 'numeric',\n    minute: '2-digit'\n  });\n  \n  const title = `[${event.title.substring(0, 30)}](${event.event_url})`;\n  const place = (event.place || 'オンライン').substring(0, 20);\n  const participants = `${event.accepted}/${event.limit || '∞'}`;\n  const status = event.limit && event.accepted >= event.limit ? '🔴 満席' : '🔵 受付中';\n  \n  markdown += `| ${dateStr} | ${title} | ${place} | ${participants} | ${status} |\\n`;\n});\n\nmarkdown += `\\n\\n*最終更新: ${new Date().toISOString()}*`;\n\nreturn { markdown, filename: 'ios-events-calendar.md' };"
+    }
+  ],
+  "connections": {
+    "schedule_trigger": {
+      "main": [
+        [
+          {
+            "node": "fetch_connpass_ios_discord",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "fetch_connpass_love_swift",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetch_connpass_ios_discord": {
+      "main": [
+        [
+          {
+            "node": "merge_events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetch_connpass_love_swift": {
+      "main": [
+        [
+          {
+            "node": "merge_events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "merge_events": {
+      "main": [
+        [
+          {
+            "node": "check_new_events",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "generate_calendar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_new_events": {
+      "main": [
+        [
+          {
+            "node": "format_discord_message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "post_to_twitter",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "save_to_database",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "format_discord_message": {
+      "main": [
+        [
+          {
+            "node": "post_to_discord_ios_tokyo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
