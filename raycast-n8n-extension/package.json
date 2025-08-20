@@ -78,6 +78,21 @@
       "description": "URL to presets.json (e.g. https://your-n8n.example.com/presets.json or GitHub raw)",
       "type": "textfield",
       "required": false
+    },
+    {
+      "name": "apiKey",
+      "title": "API Key (optional)",
+      "description": "If your webhook requires an API key, set it here.",
+      "type": "password",
+      "required": false
+    },
+    {
+      "name": "apiKeyHeaderName",
+      "title": "API Key Header Name",
+      "description": "Header name to send API key (default: X-API-Key)",
+      "type": "textfield",
+      "required": false,
+      "default": "X-API-Key"
     }
   ],
   "dependencies": {

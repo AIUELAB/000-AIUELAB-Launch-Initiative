@@ -22,20 +22,15 @@ export type RemotePresets = {
   >;
 };
 
-// プロジェクトごとに編集してください（例）
+// 初期プリセット（ローカル定義）
 export const PRESETS: Preset[] = [
   {
-    id: "raycast-cli",
-    title: "Raycast CLI Trigger",
-    path: "raycast-cli",
-    description: "Run workflow for Raycast demo",
-    defaultPayload: '{"source":"raycast","ts":"{{now}}"}'
-  },
-  {
-    id: "daily-report",
-    title: "Daily Report",
-    path: "daily-report",
-    description: "Generate daily report"
+    id: "quick-test",
+    title: "Quick Test",
+    path: "/webhook/test",
+    description: "動作確認用",
+    category: "automation",
+    icon: "⚡"
   }
 ];
 
