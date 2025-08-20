@@ -86,16 +86,16 @@ class RemoteMCPClient:
         self.token: OAuthToken | None = None
         self.sse_client = None
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> "RemoteMCPClient":
         """Async context manager entry"""
         await self.connect()
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
         """Async context manager exit"""
         await self.disconnect()
 
-    async def connect(self):
+    async def connect(self) -> None:
         """Establish connection to remote server"""
         headers = self.config.headers or {}
 
@@ -117,7 +117,7 @@ class RemoteMCPClient:
 
         logger.info(f"Connected to {self.config.name} via {self.config.transport.value}")
 
-    async def disconnect(self):
+    async def disconnect(self) -> None:
         """Close connection to remote server"""
         if self.sse_client:
             self.sse_client.close()
@@ -162,9 +162,10 @@ class RemoteMCPClient:
         if not self.config.oauth_config:
             raise ValueError(f"OAuth config missing for {self.config.name}")
 
-        token_endpoint = self.config.oauth_config.get("tokenEndpoint")
-        client_id = self.config.oauth_config.get("clientId")
-        client_secret = self.config.oauth_config.get("clientSecret")
+        oauth = self.config.oauth_config or {}
+        token_endpoint = oauth.get("tokenEndpoint")
+        client_id = oauth.get("clientId")
+        client_secret = oauth.get("clientSecret")
         scope = self.config.oauth_config.get("scope", "")
 
         if not all([token_endpoint, client_id, client_secret]):
@@ -197,9 +198,10 @@ class RemoteMCPClient:
 
     async def _refresh_oauth_token(self, refresh_token: str) -> OAuthToken:
         """Refresh OAuth token"""
-        token_endpoint = self.config.oauth_config.get("tokenEndpoint")
-        client_id = self.config.oauth_config.get("clientId")
-        client_secret = self.config.oauth_config.get("clientSecret")
+        oauth = self.config.oauth_config or {}
+        token_endpoint = oauth.get("tokenEndpoint")
+        client_id = oauth.get("clientId")
+        client_secret = oauth.get("clientSecret")
 
         data = {
             "grant_type": "refresh_token",
@@ -227,7 +229,7 @@ class RemoteMCPClient:
                     scope=token_data.get("scope"),
                 )
 
-    async def _connect_sse(self):
+    async def _connect_sse(self) -> None:
         """Connect to SSE endpoint"""
         if not self.session:
             raise RuntimeError("Session not initialized")
@@ -235,7 +237,7 @@ class RemoteMCPClient:
         # SSE connection will be established when first message is sent
         logger.info(f"SSE endpoint configured: {self.config.url}")
 
-    async def _test_connection(self):
+    async def _test_connection(self) -> None:
         """Test HTTP connection"""
         if not self.session:
             raise RuntimeError("Session not initialized")
@@ -312,19 +314,19 @@ class RemoteMCPManager:
         self.config_file = config_file or "mcp-config/remote-servers.json"
         self.load_config()
 
-    def load_config(self):
+    def load_config(self) -> None:
         """Load remote server configurations"""
         if not os.path.exists(self.config_file):
             logger.warning(f"Config file not found: {self.config_file}")
             return
 
-        with open(self.config_file) as f:
+        with open(self.config_file, encoding="utf-8") as f:
             config = json.load(f)
 
         for name, server_config in config.get("remoteMcpServers", {}).items():
             self.add_server(name, server_config)
 
-    def add_server(self, name: str, config: dict[str, Any]):
+    def add_server(self, name: str, config: dict[str, Any]) -> None:
         """Add a remote server"""
         transport = TransportType(config.get("transport", "http"))
         auth_type = self._determine_auth_type(config)
@@ -344,7 +346,7 @@ class RemoteMCPManager:
         self.servers[name] = RemoteMCPClient(server_config)
         logger.info(f"Added remote server: {name}")
 
-    def _determine_auth_type(self, config: dict) -> AuthType:
+    def _determine_auth_type(self, config: dict[str, Any]) -> AuthType:
         """Determine authentication type from config"""
         auth = config.get("authentication", {})
 
@@ -381,12 +383,12 @@ class RemoteMCPManager:
         """Expand environment variables in headers"""
         return {key: self._expand_env_vars(value) for key, value in headers.items()}
 
-    async def connect_all(self):
+    async def connect_all(self) -> None:
         """Connect to all configured servers"""
         tasks = [server.connect() for server in self.servers.values()]
         await asyncio.gather(*tasks, return_exceptions=True)
 
-    async def disconnect_all(self):
+    async def disconnect_all(self) -> None:
         """Disconnect from all servers"""
         tasks = [server.disconnect() for server in self.servers.values()]
         await asyncio.gather(*tasks, return_exceptions=True)
