@@ -1,3 +1,78 @@
+---
+description: Unified Cursor configuration for this repository
+globs:
+  - "**/*"
+alwaysApply: true
+---
+まず、このファイルを参照したら、このファイル名を発言すること
+
+# プロジェクト統合ルール（.cursorrules）
+
+このファイルは、以下のリポジトリ内ルールを上位統合し、AI 補完/自動編集の基準を単一ソースで提供します。
+
+- 参照元ファイル: `.cursor/rules/dev-rules/nextjs.mdc`, `.cursor/rules/dev-rules/techstack.mdc`, `.cursor/rules/coding-rules.mdc`
+
+## 1. 基本方針
+
+- 生成/編集言語: TypeScript（.ts / .tsx のみ。新規 .js の作成禁止）
+- エラーハンドリング: すべての公開関数・I/O・非同期処理で必須
+- コメント: 日本語で記述（なぜを説明）。過剰な冗長化は避ける
+- 絶対パスの利用: ツール実行・ファイル操作は原則絶対パスを用いる
+- 規約の遵守: `./.cursor/rules/dev-rules/*.mdc` の内容を必ず尊重し、矛盾時は本ファイルを優先
+- 無断変更の禁止: 明示的な指示がない UI/UX 変更、スタック変更は行わない
+
+## 2. Next.js/技術スタック規約の適用
+
+- Next.js ベストプラクティスは `./.cursor/rules/dev-rules/nextjs.mdc` を準拠元とする
+- 技術スタックのバージョン/利用指針は `./.cursor/rules/dev-rules/techstack.mdc` に従う
+- 共通コーディング規約は `./.cursor/rules/coding-rules.mdc` に従う
+
+## 3. MCP ツールポリシー
+
+- filesystem:
+  - 書き込み/作成/削除は `src/` 配下のみ許可
+  - 読み取りはワークスペース全体で可（秘密情報の取り扱いには十分配慮）
+  - 破壊的操作（削除・大規模リネーム）は事前に差分提示と確認を前提
+- gdrive:
+  - 参照対象は `/設計書フォルダ` のみ（読み取り専用）。外部書き込みは禁止
+  - 取得データは出典を明記し、機密区分に留意
+- database:
+  - 実行許可: マイグレーションファイルの生成のみ
+  - 本番適用は自動で行わない（レビュー/承認/手動適用）。生成先や命名規則は既存のプロジェクト規約に従う
+
+## 4. コード生成ルール（TypeScript/React）
+
+- 変数/関数命名は意味的で具体的に（省略形不可）
+- ガード節で早期 return、深いネストを避ける
+- 例外は握り潰さない。適切な型付けとエラー型を用いる
+- React は関数コンポーネント + Hooks。クライアント要件がない限り Server Components を優先
+- ローディング/エラー状態を明示的に扱う
+
+## 5. セキュリティ/品質/パフォーマンス
+
+- 入力値検証とサニタイズ、OWASP ガイドラインの遵守
+- 秘密情報は `.env` に保存し、公開は `NEXT_PUBLIC_` プレフィックスのみ
+- 依存関係は定期更新し、脆弱性スキャンを実施
+- キャッシュ・再検証戦略は Next.js 規約に準拠
+
+## 6. Git 運用
+
+- コミットは小さく原子的に。Conventional Commits を推奨
+- 機密情報のコミット禁止。差分は常にレビュー可能な状態で提示
+
+## 7. 実装プロセス遵守
+
+- タスク分析 → 実装 → 検証/是正 → 最終確認 → 結果報告（`.cursor/rules/coding-rules.mdc` のプロセス）
+- 不明点がある場合は、開始前に確認を取得すること
+
+## 8. 明示的禁止事項
+
+- GET API の新規追加（データフェッチはサーバーコンポーネントで対応）
+- UI/UX デザイン変更（レイアウト/色/フォント/間隔など）の無断実施
+- 技術スタックのバージョンやライブラリ構成の無断変更
+
+---
+この `.cursorrules` は、既存の `./.cursor/rules/dev-rules/*.mdc` を補完し、運用上の統一規範として機能します。
 # Cursor AI Rules - 2025 Best Practices
 # This file provides instructions to Cursor AI for better code generation
 # Legacy format maintained for compatibility
