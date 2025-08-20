@@ -11,8 +11,8 @@ import threading
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, TypeAlias
 from types import TracebackType
+from typing import Any, TypeAlias
 
 from loguru import logger
 
