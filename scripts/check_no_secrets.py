@@ -28,11 +28,10 @@ SECRET_PATTERNS = [
     (r'secret\s*=\s*["\'][^"\']{8,}["\']', "Hardcoded Secret"),
     # Private Keys
     (r"-----BEGIN (RSA |EC |DSA |OPENSSH |)PRIVATE KEY-----", "Private Key"),
-    # Break up the PGP header to avoid self false-positive in this scanner
-    (r"-----BEGIN " "PGP PRIVATE KEY BLOCK" "-----", "PGP Private Key"),
+    (r"-----BEGIN PGP PRIVATE KEY BLOCK-----", "PGP Private Key"),
     # Tokens
-    # Break up the Bearer token pattern to reduce false positives in examples
-    (r"Bearer" "\s+" "[a-zA-Z0-9_\-\.=]+", "Bearer Token"),
+    # Require quoted pattern to avoid matching constant names like BEARER = "bearer"
+    (r'["\']Bearer\s+[A-Za-z0-9._\-]+=*["\']', "Bearer Token"),
     (r'["\']xoxb-[0-9]{10,13}-[0-9]{10,13}-[a-zA-Z0-9]{24}["\']', "Slack Bot Token"),
     (r'["\']xoxp-[0-9]{10,13}-[0-9]{10,13}-[a-zA-Z0-9]{24}["\']', "Slack User Token"),
 ]
