@@ -12,6 +12,8 @@ import os
 from datetime import datetime
 from pathlib import Path
 
+N8N_NOT_RUNNING = "n8n not running"
+
 
 class N8NAutomation:
     """n8n自動化ヘルパークラス"""
@@ -53,7 +55,7 @@ class WorkflowTriggers:
     def on_git_commit(self, message: str, files: List[str]) -> Dict[str, Any]:
         """Git コミット時にn8nワークフローをトリガー"""
         if not self.n8n.check_health():
-            return {"skipped": True, "reason": "n8n not running"}
+            return {"skipped": True, "reason": N8N_NOT_RUNNING}
 
         # 特定のファイルパターンでワークフローをトリガー
         if any(f.endswith('.test.py') for f in files):
@@ -68,7 +70,7 @@ class WorkflowTriggers:
     def on_error_detection(self, error_type: str, error_message: str, file_path: str) -> Dict[str, Any]:
         """エラー検出時にn8nワークフローをトリガー"""
         if not self.n8n.check_health():
-            return {"skipped": True, "reason": "n8n not running"}
+            return {"skipped": True, "reason": N8N_NOT_RUNNING}
 
         # エラー通知ワークフローをトリガー
         return self.n8n.trigger_webhook("error-handler", {
@@ -81,7 +83,7 @@ class WorkflowTriggers:
     def on_build_complete(self, success: bool, duration: float, output: str) -> Dict[str, Any]:
         """ビルド完了時にn8nワークフローをトリガー"""
         if not self.n8n.check_health():
-            return {"skipped": True, "reason": "n8n not running"}
+            return {"skipped": True, "reason": N8N_NOT_RUNNING}
 
         return self.n8n.trigger_webhook("build-notification", {
             "success": success,
@@ -93,7 +95,7 @@ class WorkflowTriggers:
     def on_deploy_request(self, environment: str, version: str) -> Dict[str, Any]:
         """デプロイリクエスト時にn8nワークフローをトリガー"""
         if not self.n8n.check_health():
-            return {"skipped": True, "reason": "n8n not running"}
+            return {"skipped": True, "reason": N8N_NOT_RUNNING}
 
         return self.n8n.trigger_webhook("deploy", {
             "environment": environment,
@@ -180,11 +182,9 @@ auto_trigger_n8n('build', success=$success, duration=$duration, output='$output'
 }
 '''
 
-    # Bashヘルパースクリプトを作成
     with open("scripts/n8n_hooks.sh", "w", encoding="utf-8") as f:
         f.write(script_content)
 
-    # 実行: 所有者のみ実行可能（最小権限）
     os.chmod("scripts/n8n_hooks.sh", 0o700)
     print("Bash integration script created at scripts/n8n_hooks.sh")
 
@@ -192,7 +192,6 @@ auto_trigger_n8n('build', success=$success, duration=$duration, output='$output'
 if __name__ == "__main__":
     import sys
 
-    # CLIとしても使用可能
     if len(sys.argv) > 1:
         command = sys.argv[1]
 
@@ -212,7 +211,6 @@ if __name__ == "__main__":
         elif command == "trigger":
             if len(sys.argv) > 2:
                 event_type = sys.argv[2]
-                # 追加の引数をkey=value形式で解析
                 kwargs: Dict[str, Any] = {}
                 for arg in sys.argv[3:]:
                     if "=" in arg:
@@ -227,6 +225,5 @@ if __name__ == "__main__":
         else:
             print("Usage: python n8n_automation.py [test|integrate|trigger]")
     else:
-        # テスト実行
         n8n = N8NAutomation()
         print(f"n8n health check: {n8n.check_health()}")
