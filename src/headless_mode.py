@@ -167,6 +167,8 @@ class TaskCache:
             cache_file.unlink()
 
 
+TESTS_DIR = "tests/"
+
 class HeadlessExecutor:
     """Enhanced headless execution engine"""
 
@@ -255,7 +257,7 @@ class HeadlessExecutor:
 
     async def _run_tests(self, params: dict, files: list[str]) -> dict:
         """Run test suite"""
-        cmd = ["pytest", "tests/", "-v", "--tb=short"]
+        cmd = ["pytest", TESTS_DIR, "-v", "--tb=short"]
 
         if files:
             cmd.extend(files)
@@ -271,18 +273,11 @@ class HeadlessExecutor:
         # Parse test results
         lines = result["stdout"].split("\n")
         passed = failed = skipped = 0
-
         for line in lines:
-            if "passed" in line:
-                parts = line.split()
-                for i, part in enumerate(parts):
-                    if part == "passed":
-                        passed = int(parts[i - 1]) if i > 0 else 0
-            if "failed" in line:
-                parts = line.split()
-                for i, part in enumerate(parts):
-                    if part == "failed":
-                        failed = int(parts[i - 1]) if i > 0 else 0
+            p, f, s = self._parse_pytest_summary_line(line)
+            if p is not None:
+                passed, failed, skipped = p, f, s
+                break
 
         return {
             "command": " ".join(cmd),
@@ -293,6 +288,18 @@ class HeadlessExecutor:
             "errors": result["stderr"],
             "exit_code": result["exit_code"],
         }
+
+    @staticmethod
+    def _parse_pytest_summary_line(line: str) -> tuple[int | None, int | None, int | None]:
+        """簡易にpytest要約行から件数を抽出"""
+        if " passed" in line or " failed" in line or " skipped" in line:
+            parts = line.split()
+            count_map: dict[str, int] = {}
+            for i, token in enumerate(parts):
+                if token in {"passed", "failed", "skipped"} and i > 0 and parts[i - 1].isdigit():
+                    count_map[token] = int(parts[i - 1])
+            return count_map.get("passed", 0), count_map.get("failed", 0), count_map.get("skipped", 0)
+        return None, None, None
 
     async def _run_lint(self, params: dict, files: list[str]) -> dict:
         """Run linting tools"""
@@ -537,58 +544,63 @@ class HeadlessExecutor:
         if self.output_format == OutputFormat.JSON:
             return json.dumps([r.to_dict() for r in results], indent=2)
 
-        elif self.output_format == OutputFormat.YAML:
+        if self.output_format == OutputFormat.YAML:
             return yaml.dump([r.to_dict() for r in results], default_flow_style=False)
 
-        elif self.output_format == OutputFormat.STREAM_JSON:
-            lines = []
-            for r in results:
-                lines.append(json.dumps(r.to_dict()))
-            return "\n".join(lines)
+        if self.output_format == OutputFormat.STREAM_JSON:
+            return "\n".join(json.dumps(r.to_dict()) for r in results)
 
-        elif self.output_format == OutputFormat.MARKDOWN:
-            md = "# Task Execution Results\n\n"
-            for r in results:
-                md += f"## {r.task_type.value.title()}\n\n"
-                md += f"- **Status**: {r.status}\n"
-                md += f"- **Duration**: {r.duration:.2f}s\n"
-                if r.errors:
-                    md += f"- **Errors**: {', '.join(r.errors)}\n"
-                md += "\n"
-            return md
+        if self.output_format == OutputFormat.MARKDOWN:
+            return self._format_markdown(results)
 
-        elif self.output_format == OutputFormat.HTML:
-            html = "<html><body><h1>Task Results</h1>"
-            for r in results:
-                html += f"<h2>{r.task_type.value}</h2>"
-                html += f"<p>Status: {r.status}</p>"
-                html += f"<p>Duration: {r.duration:.2f}s</p>"
-                if r.errors:
-                    html += f"<p>Errors: {', '.join(r.errors)}</p>"
-            html += "</body></html>"
-            return html
+        if self.output_format == OutputFormat.HTML:
+            return self._format_html(results)
 
-        else:  # TEXT format
-            table = Table(title="Task Execution Results")
-            table.add_column("Task", style="cyan")
-            table.add_column("Status", style="green")
-            table.add_column("Duration", style="yellow")
-            table.add_column("Errors", style="red")
+        return self._format_text(results)
 
-            for r in results:
-                status_icon = "✅" if r.status == "success" else "❌"
-                table.add_row(
-                    r.task_type.value,
-                    f"{status_icon} {r.status}",
-                    f"{r.duration:.2f}s",
-                    ", ".join(r.errors[:50]) if r.errors else "-",
-                )
+    def _format_markdown(self, results: list[TaskResult]) -> str:
+        md = "# Task Execution Results\n\n"
+        for r in results:
+            md += f"## {r.task_type.value.title()}\n\n"
+            md += f"- **Status**: {r.status}\n"
+            md += f"- **Duration**: {r.duration:.2f}s\n"
+            if r.errors:
+                md += f"- **Errors**: {', '.join(r.errors)}\n"
+            md += "\n"
+        return md
 
-            console = Console()
-            with console.capture() as capture:
-                console.print(table)
-            captured = capture.get()
-            return str(captured)
+    def _format_html(self, results: list[TaskResult]) -> str:
+        html = "<html><body><h1>Task Results</h1>"
+        for r in results:
+            html += f"<h2>{r.task_type.value}</h2>"
+            html += f"<p>Status: {r.status}</p>"
+            html += f"<p>Duration: {r.duration:.2f}s</p>"
+            if r.errors:
+                html += f"<p>Errors: {', '.join(r.errors)}</p>"
+        html += "</body></html>"
+        return html
+
+    def _format_text(self, results: list[TaskResult]) -> str:
+        table = Table(title="Task Execution Results")
+        table.add_column("Task", style="cyan")
+        table.add_column("Status", style="green")
+        table.add_column("Duration", style="yellow")
+        table.add_column("Errors", style="red")
+
+        for r in results:
+            status_icon = "✅" if r.status == "success" else "❌"
+            table.add_row(
+                r.task_type.value,
+                f"{status_icon} {r.status}",
+                f"{r.duration:.2f}s",
+                ", ".join(r.errors[:50]) if r.errors else "-",
+            )
+
+        console = Console()
+        with console.capture() as capture:
+            console.print(table)
+        captured = capture.get()
+        return str(captured)
 
     def cleanup(self):
         """Cleanup resources"""
